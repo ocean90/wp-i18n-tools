@@ -1,0 +1,40 @@
+#!/bin/sh
+TEMPLATE=wordpress.pot
+cwd=`pwd`
+cd $1
+
+plugins="hello.php markdown.php textile1.php"
+themes="default classic"
+
+xgettext --keyword=__ --keyword=_e  --default-domain=wordpress \
+    --language=php *.php --output=$cwd/$TEMPLATE
+xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
+    --language=php wp-includes/*.php --output=$cwd/$TEMPLATE
+xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
+    --language=php wp-admin/*.php --output=$cwd/$TEMPLATE
+
+for plugin in $plugins ; do
+  xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
+      --language=php wp-content/plugins/$plugin --output=$cwd/$TEMPLATE
+done
+
+for theme in $themes ; do
+  xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
+      --language=php wp-content/themes/$theme/*.php --output=$cwd/$TEMPLATE
+done
+
+cd $cwd
+
+if [ -n "$2" ]; then
+  if [ x$2 == 'x-p' ]; then
+    msgfmt --statistics $TEMPLATE
+  else
+		if [ -f $2.po ]; then
+      msgmerge -o .tmp$2.po $2.po $TEMPLATE
+			mv .tmp$2.po $2.po
+			msgfmt --statistics -o $2.mo $2.po
+ 	  else
+	   echo "Usage: $0 directoy [-p|locale]"
+    fi
+  fi
+fi
