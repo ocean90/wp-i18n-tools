@@ -4,7 +4,7 @@ cwd=`pwd`
 cd $1
 
 plugins="hello.php markdown.php textile1.php"
-themes="default classic"
+themes="classic"
 
 xgettext --keyword=__ --keyword=_e  --default-domain=wordpress \
     --language=php *.php --output=$cwd/$TEMPLATE
