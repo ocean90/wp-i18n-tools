@@ -1,0 +1,23 @@
+#!/bin/sh
+TEMPLATE=theme.pot
+cwd=`pwd`
+cd $1
+
+xgettext --keyword=__ --keyword=_e  --default-domain=theme \
+    --language=php *.php --output=$cwd/$TEMPLATE
+
+cd $cwd
+
+if [ -n "$2" ]; then
+  if [ x$2 == 'x-p' ]; then
+    msgfmt --statistics $TEMPLATE
+  else
+		if [ -f $2.po ]; then
+      msgmerge -o .tmp$2.po $2.po $TEMPLATE
+			mv .tmp$2.po $2.po
+			msgfmt --statistics -o $2.mo $2.po
+ 	  else
+	   echo "Usage: $0 directoy [-p|locale]"
+    fi
+  fi
+fi
