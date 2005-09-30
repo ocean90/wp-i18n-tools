@@ -3,7 +3,7 @@ TEMPLATE=wordpress.pot
 cwd=`pwd`
 cd $1
 
-plugins="hello.php markdown.php textile1.php"
+plugins="hello.php"
 themes="classic"
 
 xgettext --keyword=__ --keyword=_e  --default-domain=wordpress \
