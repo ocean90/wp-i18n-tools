@@ -3,7 +3,7 @@ TEMPLATE=wordpress.pot
 cwd=`pwd`
 cd $1
 
-plugins="hello.php"
+plugins="hello.php wp-db-backup.php akismet/akismet.php"
 themes="classic"
 
 xgettext --keyword=__ --keyword=_e  --default-domain=wordpress \
@@ -12,6 +12,8 @@ xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
     --language=php wp-includes/*.php --output=$cwd/$TEMPLATE
 xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
     --language=php wp-admin/*.php --output=$cwd/$TEMPLATE
+xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
+    --language=php wp-admin/import/*.php --output=$cwd/$TEMPLATE
 
 for plugin in $plugins ; do
   xgettext --keyword=__ --keyword=_e  --default-domain=wordpress -j \
