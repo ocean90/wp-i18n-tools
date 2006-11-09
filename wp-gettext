@@ -15,8 +15,8 @@ find . -name '*.php' -print \
     --default-domain=wordpress \
     --language=php \
     --output="$cwd/$TEMPLATE" \
-    --join-existing
-
+    --join-existing \
+	--from-code utf-8
 cd "$cwd"
 
 if [ -n "$2" ]; then
