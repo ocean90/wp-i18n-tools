@@ -1,4 +1,7 @@
 #!/bin/sh
+# Created by Ryan Boren
+# Later code and patches from
+# Kimmo Suominen (more) and Nikolay Bachiyski (less)
 
 TEMPLATE=wordpress.pot
 cwd=`pwd`
