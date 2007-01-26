@@ -20,7 +20,10 @@ find . -name '*.php' -print \
     --language=php \
     --output="$cwd/$TEMPLATE" \
     --join-existing \
-	--from-code utf-8
+	--from-code utf-8 \
+	--copyright-holder=WordPress \
+	--msgid-bugs-address=wp-polyglots@lists.automattic.com
+	
 cd "$cwd"
 
 if [ -n "$2" ]; then
@@ -30,9 +33,18 @@ if [ -n "$2" ]; then
 	if [ -f $2.po ]; then
 	    msgmerge -o ".tmp$2.po" "$2.po" "$TEMPLATE" \
 	    && mv ".tmp$2.po" "$2.po" \
-	    && msgfmt --statistics -o "$2.mo" "$2.po"
+	    && msgfmt --statistics -o "$2.mo" "$2.po" 
 	else
 	    echo "Usage: $0 directoy [-p|locale]"
 	fi
     fi
 fi
+
+sed -i -e '1s/^# SOME DESCRIPTIVE TITLE/# WordPress POT file/' "$TEMPLATE"
+# sub only the YEAR in the copyright message (the 2nd line)
+sed -i -e '2s/YEAR/'`date +%Y`'/' "$TEMPLATE"
+sed -i -e 's/\(^#.*\)PACKAGE\(.*\)/\1WordPress\2/g' "$TEMPLATE"
+
+# and the cherry of the pie - extract version using magic - versoextracanus!~
+VERSION=`fgrep '$wp_version' $1/wp-includes/version.php | cut -d \' -f 2`
+sed -i -e "s/\(Project-Id-Version: \)PACKAGE VERSION/\1WordPress $VERSION/" "$TEMPLATE"
