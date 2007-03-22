@@ -15,8 +15,7 @@ find . -name '*.php' -print \
 | xargs xgettext \
     --keyword=__ \
     --keyword=_e \
-    --keyword=__withdesc \
-    --keyword=_ewithdesc \
+    --keyword=_c \
 	--keyword=__ngettext:1,2 \
     --default-domain=wordpress \
     --language=php \
