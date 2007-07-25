@@ -24,22 +24,8 @@ find . -name '*.php' -print \
 	--from-code utf-8 \
 	--copyright-holder=WordPress \
 	--msgid-bugs-address=wp-polyglots@lists.automattic.com
-	
-cd "$cwd"
 
-if [ -n "$2" ]; then
-    if [ x$2 = 'x-p' ]; then
-	msgfmt --statistics "$TEMPLATE"
-    else
-	if [ -f $2.po ]; then
-	    msgmerge -o ".tmp$2.po" "$2.po" "$TEMPLATE" \
-	    && mv ".tmp$2.po" "$2.po" \
-	    && msgfmt --statistics -o "$2.mo" "$2.po" 
-	else
-	    echo "Usage: $0 directoy [-p|locale]"
-	fi
-    fi
-fi
+cd "$cwd"
 
 sed -i -e '1s/^# SOME DESCRIPTIVE TITLE/# WordPress POT file/' "$TEMPLATE"
 # sub only the YEAR in the copyright message (the 2nd line)
