@@ -29,8 +29,8 @@ def main(wp_root=None):
 			msgsuffix.suffix_pot(unsuffixed, SUFFIX_TMPL % {'handle': handle}, potfile)
 			os.remove(unsuffixed)
 		else:
-			if 0 != exitcode: print "xgettext exited with status %d." % exitcode
-			if not os.path.isfile(unsuffixed): unsuffixed + " doesn't exist, mayve xgettext didn't do its jobs or couldn't find any strings."
+			if 0 != exitcode: print >>sys.stderr, "xgettext exited with status %d (handle: %s)." % (exitcode, handle)
+			if not os.path.isfile(unsuffixed): print >>sys.stderr, unsuffixed + " doesn't exist, maybe xgettext didn't do its jobs or couldn't find any strings."
 
 
 if __name__ == "__main__":
