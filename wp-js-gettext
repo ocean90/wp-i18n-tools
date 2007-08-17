@@ -8,7 +8,14 @@ CMD_XGETTEXT_TMPL = "xgettext --keyword=__ --keyword=__n:1,2 --language=perl --o
 SUFFIX_TMPL = "|:js:%(handle)s"
 
 handle2js = {
+	'quicktags': 'wp-includes/js/quicktags.js',
 	'wp-ajax': 'wp-includes/js/wp-ajax.js',
+	'autosave': 'wp-includes/js/autosave.js',
+	'listman': 'wp-includes/js/list-manipulation.js',
+	'dbx-admin-key': 'wp-admin/js/dbx-admin-key.js',
+	'ajaxcat': 'wp-admin/js/cat.js',
+	'ajaxlinkcat': 'wp-admin/js/link-cat.js',
+	'upload': 'wp-admin/js/upload.js',
 }
 
 
