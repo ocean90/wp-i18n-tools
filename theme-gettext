@@ -1,23 +1,42 @@
 #!/bin/sh
-TEMPLATE=theme.pot
+# Created by Ryan Boren
+# Later code and patches from
+# Kimmo Suominen (more) and Nikolay Bachiyski (less)
+
 cwd=`pwd`
-cd $1
+cd "$1" || exit 1
 
-xgettext --keyword=__ --keyword=_e  --default-domain=theme \
-    --language=php *.php --output=$cwd/$TEMPLATE
+THEME_SLUG=`basename $1`
+if [ -n "$2" ]; then THEME_SLUG="$2"; fi
+TEMPLATE=$THEME_SLUG.pot
 
-cd $cwd
+if [ -d ".svn" ]; then svn up; fi
 
-if [ -n "$2" ]; then
-  if [ x$2 == 'x-p' ]; then
-    msgfmt --statistics $TEMPLATE
-  else
-		if [ -f $2.po ]; then
-      msgmerge -o .tmp$2.po $2.po $TEMPLATE
-			mv .tmp$2.po $2.po
-			msgfmt --statistics -o $2.mo $2.po
- 	  else
-	   echo "Usage: $0 directoy [-p|locale]"
-    fi
-  fi
-fi
+cp /dev/null "$cwd/$TEMPLATE"
+
+find . -name '*.php' -print \
+| sed -e 's,^\./,,' \
+| sort \
+| xargs xgettext \
+    --keyword=__ \
+    --keyword=_e \
+    --keyword=_c \
+	--keyword=__ngettext:1,2 \
+    --default-domain=wordpress \
+    --language=php \
+    --output="$cwd/$TEMPLATE" \
+    --join-existing \
+	--from-code utf-8 \
+	--copyright-holder=WordPress \
+	--msgid-bugs-address=wp-polyglots@lists.automattic.com
+
+cd "$cwd"
+
+sed -i -e "1s/^# SOME DESCRIPTIVE TITLE/# $THEME_SLUG theme pot file/" "$TEMPLATE"
+# sub only the YEAR in the copyright message (the 2nd line)
+sed -i -e '2s/YEAR/'`date +%Y`'/' "$TEMPLATE"
+sed -i -e "s/\(^#.*\)PACKAGE\(.*\)/\1$THEME_SLUG theme\2/g" "$TEMPLATE"
+
+# and the cherry of the pie - extract version using magic - versoextracanus!~
+VERSION=`fgrep -i 'Version:' $1/style.css | cut -d ' ' -f 2`
+sed -i -e "s/\(Project-Id-Version: \)PACKAGE VERSION/\1$VERSION/" "$TEMPLATE"
