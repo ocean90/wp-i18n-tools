@@ -6,7 +6,6 @@
 TEMPLATE=wordpress.pot
 cwd=`pwd`
 cd "$1" || exit 1
-if [ -d ".svn" ]; then svn up; fi
 
 cp /dev/null "$cwd/$TEMPLATE"
 
