@@ -39,4 +39,4 @@ svn mkdir $locale/trunk/messages
 svn mkdir $locale/trunk/theme
 svn mkdir $locale/trunk/dist
 
-svn commit -m "$locale" --force-log
+svn commit $locale -m "$locale" --force-log
