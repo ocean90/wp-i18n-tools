@@ -10,8 +10,6 @@ THEME_SLUG=`basename $1`
 if [ -n "$2" ]; then THEME_SLUG="$2"; fi
 TEMPLATE=$THEME_SLUG.pot
 
-if [ -d ".svn" ]; then svn up; fi
-
 cp /dev/null "$cwd/$TEMPLATE"
 
 find . -name '*.php' -print \

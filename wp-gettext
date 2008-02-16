@@ -33,5 +33,5 @@ sed -i -e '2s/YEAR/'`date +%Y`'/' "$TEMPLATE"
 sed -i -e 's/\(^#.*\)PACKAGE\(.*\)/\1WordPress\2/g' "$TEMPLATE"
 
 # and the cherry of the pie - extract version using magic - versoextracanus!~
-VERSION=`fgrep '$wp_version' $1/wp-includes/version.php | cut -d \' -f 2`
+VERSION=`fgrep '$wp_version =' $1/wp-includes/version.php | cut -d \' -f 2`
 sed -i -e "s/\(Project-Id-Version: \)PACKAGE VERSION/\1WordPress $VERSION/" "$TEMPLATE"
