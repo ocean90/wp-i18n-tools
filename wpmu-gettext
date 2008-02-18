@@ -1,0 +1,37 @@
+#!/bin/sh
+# Created by Ryan Boren
+# Later code and patches from
+# Kimmo Suominen (more) and Nikolay Bachiyski (less)
+
+TEMPLATE=wordpress.pot
+cwd=`pwd`
+cd "$1" || exit 1
+
+cp /dev/null "$cwd/$TEMPLATE"
+
+find . -name '*.php' -print \
+| sed -e 's,^\./,,' \
+| sort \
+| xargs xgettext \
+    --keyword=__ \
+    --keyword=_e \
+    --keyword=_c \
+	--keyword=__ngettext:1,2 \
+    --default-domain=wordpress \
+    --language=php \
+    --output="$cwd/$TEMPLATE" \
+    --join-existing \
+	--from-code utf-8 \
+	--copyright-holder=WordPress \
+	--msgid-bugs-address=wp-polyglots@lists.automattic.com
+
+cd "$cwd"
+
+sed -i -e '1s/^# SOME DESCRIPTIVE TITLE/# WordPress POT file/' "$TEMPLATE"
+# sub only the YEAR in the copyright message (the 2nd line)
+sed -i -e '2s/YEAR/'`date +%Y`'/' "$TEMPLATE"
+sed -i -e 's/\(^#.*\)PACKAGE\(.*\)/\1WordPress MU \2/g' "$TEMPLATE"
+
+# and the cherry of the pie - extract version using magic - versoextracanus!~
+VERSION=`fgrep '$wpmu_version =' $1/wp-includes/version.php | cut -d \' -f 2`
+sed -i -e "s/\(Project-Id-Version: \)PACKAGE VERSION/\1WordPress MU $VERSION/" "$TEMPLATE"
