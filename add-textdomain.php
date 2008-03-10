@@ -23,6 +23,7 @@ $tokens = token_get_all($source);
 $in_func = false;
 $args_started = false;
 $parens_balance = 0;
+$found_domain = false;
 
 foreach($tokens as $token) {
 	$string_success = false;
@@ -32,6 +33,11 @@ foreach($tokens as $token) {
 			$in_func = true;
 			$parens_balance = 0;
 			$args_started = false;
+			$found_domain = false;
+		} elseif (T_CONSTANT_ENCAPSED_STRING == $id && ("'$domain'" == $text || "\"$domain\"" == $text)) {
+			if ($in_func && $args_started) {
+				$found_domain = true;
+			}
 		}
 		$token = $text;
 	} elseif ('(' == $token){
@@ -40,9 +46,10 @@ foreach($tokens as $token) {
 	} elseif (')' == $token) {
 		--$parens_balance;
 		if ($in_func && 0 == $parens_balance) {
+			$token = $found_domain? ')' : ", '$domain')";
 			$in_func = false;
 			$args_started = false;
-			$token = ", '$domain')";
+			$found_domain = false;
 		}
 	}
 	echo $token;
