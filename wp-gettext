@@ -17,6 +17,7 @@ find . -name '*.php' -print \
     --keyword=_e \
     --keyword=_c \
 	--keyword=__ngettext:1,2 \
+	--keyword=__ngettext_noop:1,2 \
     --default-domain=wordpress \
     --language=php \
     --output="$cwd/$TEMPLATE" \
