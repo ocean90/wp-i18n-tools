@@ -15,7 +15,7 @@ require 'pomo/pomo.php';
 define('HEADERS_MAX_LINES', 20);
 
 function usage() {
-	stderr("Usage: php append-ext-headers.php EXT POT");
+	stderr("Usage: php pot-ext-meta.php EXT POT");
 	stderr("Adds metadata from a WordPress theme or plugin file EXT to POT file");
 }
 
