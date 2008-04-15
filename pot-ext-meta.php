@@ -4,7 +4,9 @@
  * Console application, which adds metadata strings from
  * a WordPress extension to a POT file
  *
- * $Id$
+ * @version $Id$
+ * @package wordpress-i18n
+ * @subpackage tools
  */
 
 error_reporting(E_ALL);
