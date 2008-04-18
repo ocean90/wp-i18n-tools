@@ -51,12 +51,12 @@ $pot_filename = (isset($argv[2]))? $argv[2] : '-';
 
 $extf = @fopen($ext_filename, 'r');
 if (false === $extf) {
-	cli_die("Couldn't open extension filename: $ext_filename!");
+	cli_die("Couldn't open extension file: $ext_filename!");
 }
 
 $potf = '-' == $pot_filename? STDOUT : @fopen($pot_filename, 'a');
 if (false === $potf) {
-	cli_die("Couldn't open extension filename: $pot_filename!");
+	cli_die("Couldn't open pot file: $pot_filename!");
 }
 
 $first_lines	= '';
