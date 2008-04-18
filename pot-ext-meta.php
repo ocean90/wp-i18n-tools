@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * Console application, which adds metadata strings from
