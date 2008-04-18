@@ -11,7 +11,7 @@
 
 error_reporting(E_ALL);
 
-require 'pomo/pomo.php';
+require 'pomo/po.php';
 
 
 define('HEADERS_MAX_LINES', 20);
@@ -32,10 +32,13 @@ function cli_die($msg) {
 
 $headers = array(
 	'Plugin Name',
+	'Theme Name',
 	'Plugin URI',
+	'Theme URI',
 	'Description',
 	'Author',
 	'Author URI',
+	'Tags',
 );
 
 if (count($argv) < 2 || count($argv) > 3) {
@@ -67,12 +70,14 @@ foreach(range(1, HEADERS_MAX_LINES) as $x) {
 }
 foreach($headers as $header) {
 	if (preg_match('|'.$header.':(.*)$|mi', $first_lines, $matches)) {
+		$string = trim($matches[1]);
+		if (empty($string)) continue;
 		$args = array(
-			'singular' => trim($matches[1]),
+			'singular' => $string,
 			'extracted_comments' => $header.' of an extension',
 		);
-		$entry = new GP_Gettext_Entry($args);
-		fwrite($potf, "\n".$entry->to_po()."\n");
+		$entry = new Translation_Entry($args);
+		fwrite($potf, "\n".PO::export_entry($entry)."\n");
 	}
 }
 fclose($extf);
