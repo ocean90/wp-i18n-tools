@@ -9,8 +9,8 @@
  */
 error_reporting(E_ALL);
 
-require 'pomo/entry.php';
-require 'pomo/po.php';
+require_once 'pomo/po.php';
+require_once 'pomo/mo.php';
 
 define('LOGGING', false);
 
@@ -55,6 +55,11 @@ function make_string_aggregator($global_array_name) {
 	$a = $global_array_name;
 	$GLOBALS[$a] = array();
 	return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, $line_number);');
+}
+
+function make_mo_replacer($global_mo_name) {
+	$m = $global_mo_name;
+	return create_function('$token, $string', 'global $'.$m.'; return var_export($'.$m.'->translate($string), true);');
 }
 
 function walk_tokens(&$tokens, $string_action, $other_action, $register_action=null) {
@@ -117,12 +122,14 @@ function walk_tokens(&$tokens, $string_action, $other_action, $register_action=n
 
 
 function command_extract() {
-	$global_name = '__entries_'.mt_rand(1, 1000);
-	$GLOBALS[$global_name] = array();
 	$args = func_get_args();
 	$pot_filename = $args[0];
 	$filenames = array_slice($args, 1);
+
+	$global_name = '__entries_'.mt_rand(1, 1000);
+	$GLOBALS[$global_name] = array();
 	$aggregator = make_string_aggregator($global_name);
+
 	foreach($filenames as $filename) {
 		$tokens = token_get_all(file_get_contents($filename));
 		walk_tokens(&$tokens, 'ignore_token', 'ignore_token', $aggregator);
@@ -147,6 +154,25 @@ function command_extract() {
 }
 
 function command_replace() {
+	$args = func_get_args();
+	$mo_filename = $args[0];
+	$filenames = array_slice($args, 1);
+
+	$global_name = '__mo_'.mt_rand(1, 1000);
+	$GLOBALS[$global_name] = new MO();
+	$replacer = make_mo_replacer($global_name);
+
+	$res = $GLOBALS[$global_name]->import_from_file($mo_filename);
+	if (false === $res) {
+		cli_die("Couldn't read MO file '$mo_filename'!");
+	}
+	foreach($filenames as $filename) {
+		$tokens = token_get_all(file_get_contents($filename));
+		$new_file = walk_tokens(&$tokens, $replacer, 'unchanged_token');
+		$f = fopen($filename, 'w');
+		fwrite($f, $new_file);
+		fclose($f);
+	}
 }
 
 function usage() {
