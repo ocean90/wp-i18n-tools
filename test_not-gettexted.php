@@ -18,13 +18,7 @@ class Test_Not_Gettexted extends PHPUnit_Framework_TestCase {
 		call_user_func($f, 'a', 'b', 'c');
 		$this->assertEquals(array(array('x', 'y', 'z'), array('a', 'b', 'c')), $baba);
 	}
-	function test_make_string_replacer() {
-		global $dict;
-		$dict = array('a' => 'b');
-		$f = make_string_replacer('dict');
-		$this->assertEquals("'b'", $f(null, 'a'));
-		$this->assertEquals("'c'", $f(null, 'c'));
-	}
+
 	function test_walk() {
 		$code = '
 <?php

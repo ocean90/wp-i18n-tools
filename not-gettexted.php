@@ -21,7 +21,7 @@ define('STAGE_STRING', 3);
 define('STAGE_WHITESPACE_AFTER', 4);
 define('STAGE_END_COMMENT', 4);
 
-$commands = array('extract' => 'command_extract', /* 'replace' => 'command_replace' */);
+$commands = array('extract' => 'command_extract', 'replace' => 'command_replace' );
 
 // see: http://php.net/tokenizer
 if (!defined('T_ML_COMMENT'))
@@ -55,11 +55,6 @@ function make_string_aggregator($global_array_name) {
 	$a = $global_array_name;
 	$GLOBALS[$a] = array();
 	return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, $line_number);');
-}
-
-function make_string_replacer($global_array_name) {
-	$a = $global_array_name;
-	return create_function('$token, $string', 'global $'.$a.'; return var_export(isset($'.$a.'[$string])? $'.$a.'[$string] : $string, true);');
 }
 
 function walk_tokens(&$tokens, $string_action, $other_action, $register_action=null) {
@@ -149,6 +144,9 @@ function command_extract() {
 		fwrite($potf, "\n".PO::export_entry($entry)."\n");
 	}
 	if ('-' != $pot_filename) fclose($potf);
+}
+
+function command_replace() {
 }
 
 function usage() {
