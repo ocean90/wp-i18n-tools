@@ -9,6 +9,7 @@
  */
 error_reporting(E_ALL);
 
+require 'pomo/entry.php';
 require 'pomo/po.php';
 
 define('LOGGING', false);
@@ -52,7 +53,8 @@ function ignore_token($token, $s='') {
 
 function make_string_aggregator($global_array_name) {
 	$a = $global_array_name;
-	return create_function('$string, $comment_id', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id);');
+	$GLOBALS[$a] = array();
+	return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, $line_number);');
 }
 
 function make_string_replacer($global_array_name) {
@@ -64,12 +66,13 @@ function walk_tokens(&$tokens, $string_action, $other_action, $register_action=n
 
 	$current_comment_id = '';
 	$current_string = '';
+	$current_string_line = 0;
 
 	$result = '';
 
 	foreach($tokens as $token) {
 		if (is_array($token)) {
-			list($id, $text) = $token;
+			list($id, $text, $line) = $token;
 			if (T_ML_COMMENT == $id && preg_match('|/\*\s*(/?WP_I18N_[a-z_]+)\s*\*/|i', $text, $matches)) {
 				if (STAGE_OUTSIDE == $stage) {
 					$stage = STAGE_START_COMMENT;
@@ -82,13 +85,14 @@ function walk_tokens(&$tokens, $string_action, $other_action, $register_action=n
 					$stage = STAGE_END_COMMENT; 
 					logmsg('end comment', $current_comment_id);
 					$result .= call_user_func($other_action, $token);
-					if (!is_null($register_action)) call_user_func($register_action, $current_string, $current_comment_id);
+					if (!is_null($register_action)) call_user_func($register_action, $current_string, $current_comment_id, $current_string_line);
 					continue;
 				}
 			} else if (T_CONSTANT_ENCAPSED_STRING == $id) {
 				if (STAGE_START_COMMENT <= $stage && $stage < STAGE_WHITESPACE_AFTER) {
 					eval('$current_string='.$text.';');
 					logmsg('string', $current_string);
+					$current_string_line = $line;
 					$result .= call_user_func($string_action, $token, $current_string);
 					continue;
 				}
@@ -110,6 +114,8 @@ function walk_tokens(&$tokens, $string_action, $other_action, $register_action=n
 		$result .= call_user_func($other_action, $token);
 		$stage = STAGE_OUTSIDE;
 		$current_comment_id = '';
+		$current_string = '';
+		$current_string_line = 0;
 	}
 	return $result;
 }
@@ -133,11 +139,11 @@ function command_extract() {
 	}
 
 	foreach($GLOBALS[$global_name] as $item) {
-		list($string, $comment_id) = $item;
+		list($string, $comment_id, $line_number) = $item;
 		$args = array(
 			'singular' => $string,
 			'extracted_comments' => "Not gettexted string $comment_id",
-			//TODO: line number from token[2]
+			'references' => array("$filename:$line_number"),
 		);
 		$entry = new Translation_Entry($args);
 		fwrite($potf, "\n".PO::export_entry($entry)."\n");
