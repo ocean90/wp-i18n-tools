@@ -141,11 +141,12 @@ function command_extract() {
 	}
 
 	foreach($GLOBALS[$global_name] as $item) {
-		list($string, $comment_id, $line_number) = $item;
+		@list($string, $comment_id, $line_number) = $item;
+		$ref_line_number = isset($line_number)? ":$line_number" : '';
 		$args = array(
 			'singular' => $string,
 			'extracted_comments' => "Not gettexted string $comment_id",
-			'references' => array("$filename:$line_number"),
+			'references' => array("$filename$ref_line_number"),
 		);
 		$entry = new Translation_Entry($args);
 		fwrite($potf, "\n".PO::export_entry($entry)."\n");
