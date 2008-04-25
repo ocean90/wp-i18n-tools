@@ -47,7 +47,7 @@ function xgettext($project, $dir, $output_file, $placeholders = array()) {
 	foreach($options as $key => $value)
 		$options[$key] = str_replace($placeholder_keys, $placeholder_values, $value);
 
-	if (MAKEPOT_USE_ADVANCED_XGETTEXT_ARGS) {
+	if (!MAKEPOT_USE_ADVANCED_XGETTEXT_ARGS) {
 		unset($options['package-name']);
 		unset($options['package-version']);
 	}
