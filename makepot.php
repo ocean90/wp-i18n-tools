@@ -1,4 +1,8 @@
 <?php
+
+if (!defined('MAKEPOT_USE_ADVANCED_XGETTEXT_ARGS'))
+	define('MAKEPOT_USE_ADVANCED_XGETTEXT_ARGS', true);
+
 $projects = array(
 	'wp',
 	'wp-plugin',
@@ -43,6 +47,10 @@ function xgettext($project, $dir, $output_file, $placeholders = array()) {
 	foreach($options as $key => $value)
 		$options[$key] = str_replace($placeholder_keys, $placeholder_values, $value);
 
+	if (MAKEPOT_USE_ADVANCED_XGETTEXT_ARGS) {
+		unset($options['package-name']);
+		unset($options['package-version']);
+	}
 
 	$long_options = array();
 	foreach($keywords as $keyword)
@@ -105,7 +113,7 @@ function wp_plugin($dir, $output, $slug = null) {
 // wasn't included
 $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
-	if (3 == count($argv)) {
+	if (3 == count($argv) || 4 == count($argv)) {
 		call_user_func(str_replace('-', '_', $argv[1]), realpath($argv[2]), isset($argv[3])? $argv[3] : null);
 	} else {
 		$usage  = "Usage: php makepot.php PROJECT DIRECTORY [OUTPUT]\n\n";
