@@ -59,7 +59,8 @@ find . -name '*.php' -print \\
 | sort \\
 | xargs xgettext \\
 $string_options";
-	system($cmd);
+	system($cmd, $exit_code);
+	return $exit_code;
 }
 
 function wp($dir, $output) {
@@ -68,7 +69,7 @@ function wp($dir, $output) {
 		$placeholders['version'] = $matches[1];
 	}
 	$output = is_null($output)? 'wordpress.pot' : $output;
-	xgettext('wp', $dir, $output, $placeholders);
+	return xgettext('wp', $dir, $output, $placeholders);
 }
 
 function get_addon_header($header, &$source) {
@@ -76,15 +77,17 @@ function get_addon_header($header, &$source) {
 	return trim($matches[1]);
 }
 
-function wp_plugin($dir, $output) {
+function wp_plugin($dir, $output, $slug = null) {
 	$placeholders = array();
 	// guess plugin slug
-	if ('trunk' == basename($dir)) {
-		$slug = basename(dirname($dir));
-	} elseif (in_array(basename(dirname($dir)), array('branches', 'tags'))) {
-		$slug = basename(dirname(dirname($dir)));
-	} else {
-		$slug = basename($dir);
+	if (is_null($slug)) {
+		if ('trunk' == basename($dir)) {
+			$slug = basename(dirname($dir));
+		} elseif (in_array(basename(dirname($dir)), array('branches', 'tags'))) {
+			$slug = basename(dirname(dirname($dir)));
+		} else {
+			$slug = basename($dir);
+		}
 	}
 	$main_file = $dir.'/'.$slug.'.php';
 	$source = file_get_contents($main_file);
@@ -95,7 +98,7 @@ function wp_plugin($dir, $output) {
 	$placeholders['slug'] = $slug;
 
 	$output = is_null($output)? "$slug.pot" : $output;
-	xgettext('wp-plugin', $dir, $output, $placeholders);
+	return xgettext('wp-plugin', $dir, $output, $placeholders);
 }
 
 // run the CLI only if the file
