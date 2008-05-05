@@ -3,6 +3,7 @@ class MakePOT {
 	var $use_advanced_xgettext_args = true;
 
 	var $projects = array(
+		'generic',
 		'wp',
 		'wp-plugin',
 	);
@@ -18,6 +19,7 @@ class MakePOT {
 			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com', 
 			'language' => 'php',
 		),
+		'generic' => array(),
 		'wp' => array(
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
@@ -85,6 +87,11 @@ class MakePOT {
 		preg_match('|'.$header.':(.*)$|mi', $source, $matches);
 		return trim($matches[1]);
 	}
+
+	function generic($dir, $output) {
+		$output = is_null($output)? "generic.pot" : $output;
+		return $this->xgettext('generic', $dir, $output, array());
+	} 
 
 	function wp_plugin($dir, $output, $slug = null) {
 		$placeholders = array();
