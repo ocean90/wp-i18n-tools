@@ -31,6 +31,7 @@ class AddTextdomain {
 	function process_file($domain, $source_filename, $inplace) {
 
 		$this->modified_contents = '';
+		$domain = addslashes($domain);
 
 		$source = file_get_contents($source_filename);
 		$tokens = token_get_all($source);
@@ -96,7 +97,7 @@ if ($included_files[0] == __FILE__) {
 		array_shift($argv);	
 	}
 
-	$adddomain->process_file(addslashes($argv[1]), $argv[2], $inplace);
+	$adddomain->process_file($argv[1], $argv[2], $inplace);
 }
 
 ?>
