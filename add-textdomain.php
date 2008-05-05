@@ -10,14 +10,14 @@
 error_reporting(E_ALL);
 
 if (!isset($argv[1]) || !isset($argv[2])) {
-	die("Adds the string <domain> as a last argument to all i18n function calls in <file>\nand prints the modified php file on standard output.\nUsage: {$argv[0]} <file> <domain>\n");
+	die("Adds the string <domain> as a last argument to all i18n function calls in <file>\nand prints the modified php file on standard output.\nUsage: {$argv[0]} <domain> <file>\n");
 }
 
 $funcs = array('__', '_e', '_c', '__ngettext');
-$domain = addslashes($argv[2]);
+$domain = addslashes($argv[1]);
 
 
-$source = file_get_contents($argv[1]);
+$source = file_get_contents($argv[2]);
 $tokens = token_get_all($source);
 
 $in_func = false;
