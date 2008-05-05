@@ -9,15 +9,43 @@
  */
 error_reporting(E_ALL);
 
+
+$inplace = false;
+$modified_contents = '';
+
+function usage() {
+	$usage = "Usage: php add-textdomain.php <domain> <file>\n\nAdds the string <domain> as a last argument to all i18n function calls in <file>\nand prints the modified php file on standard output.\n";
+	fwrite(STDERR, $usage);
+	exit(1);
+}
+
+function process_token($token_text) {
+	global $inplace;
+	global $modified_contents;
+
+	if ($inplace)
+		$modified_contents .= $token_text;
+	else
+		echo $token_text;
+}
+
+
 if (!isset($argv[1]) || !isset($argv[2])) {
-	die("Adds the string <domain> as a last argument to all i18n function calls in <file>\nand prints the modified php file on standard output.\nUsage: {$argv[0]} <domain> <file>\n");
+	usage();
+}
+
+if ('-i' == $argv[1]) {
+	$inplace = true;
+	if (!isset($argv[3])) usage();
+	array_shift($argv);	
 }
 
 $funcs = array('__', '_e', '_c', '__ngettext');
 $domain = addslashes($argv[1]);
+$source_filename = $argv[2];
 
 
-$source = file_get_contents($argv[2]);
+$source = file_get_contents($source_filename);
 $tokens = token_get_all($source);
 
 $in_func = false;
@@ -52,7 +80,13 @@ foreach($tokens as $token) {
 			$found_domain = false;
 		}
 	}
-	echo $token;
+	process_token($token);
+}
+
+if ($inplace) {
+	$f = fopen($source_filename, 'w');
+	fwrite($f, $modified_contents);
+	fclose($f);
 }
 
 ?>
