@@ -1,6 +1,7 @@
 <?php
 class MakePOT {
 	var $use_advanced_xgettext_args = true;
+	var $max_header_lines = 30;
 
 	var $projects = array(
 		'generic',
@@ -83,9 +84,27 @@ class MakePOT {
 		return $this->xgettext('wp', $dir, $output, $placeholders);
 	}
 
+	function get_first_lines($filename, $lines = 30) {
+		$extf = fopen($filename, 'r');
+		if (!$extf) return false;
+		$first_lines = '';
+		foreach(range(1, $lines) as $x) {
+			if (feof($extf)) break;
+			$line = fgets($extf);
+			if (false === $line) {
+				return false;
+			}
+			$first_lines .= $line;
+		}
+		return $first_lines;
+	}
+
+
 	function get_addon_header($header, &$source) {
-		preg_match('|'.$header.':(.*)$|mi', $source, $matches);
-		return trim($matches[1]);
+		if (preg_match('|'.$header.':(.*)$|mi', $source, $matches))
+			return trim($matches[1]);
+		else
+			return false;
 	}
 
 	function generic($dir, $output) {
@@ -106,7 +125,7 @@ class MakePOT {
 			}
 		}
 		$main_file = $dir.'/'.$slug.'.php';
-		$source = file_get_contents($main_file);
+		$source = $this->get_first_lines($main_file, $this->max_header_lines);
 
 		$placeholders['version'] = $this->get_addon_header('Version', $source);
 		$placeholders['author'] = $this->get_addon_header('Author', $source);
