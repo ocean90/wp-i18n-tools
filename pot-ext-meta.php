@@ -8,10 +8,8 @@
  * @subpackage tools
  */
 
-error_reporting(E_ALL);
-
-require 'pomo/po.php';
-require 'makepot.php';
+require_once 'pomo/po.php';
+require_once 'makepot.php';
 
 class PotExtMeta {
 
