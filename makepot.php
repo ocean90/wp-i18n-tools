@@ -112,17 +112,22 @@ class MakePOT {
 		return $this->xgettext('generic', $dir, $output, array());
 	} 
 
+	function guess_plugin_slug($dir) {
+		if ('trunk' == basename($dir)) {
+			$slug = basename(dirname($dir));
+		} elseif (in_array(basename(dirname($dir)), array('branches', 'tags'))) {
+			$slug = basename(dirname(dirname($dir)));
+		} else {
+			$slug = basename($dir);
+		}
+		return $slug;
+	}
+
 	function wp_plugin($dir, $output, $slug = null) {
 		$placeholders = array();
 		// guess plugin slug
 		if (is_null($slug)) {
-			if ('trunk' == basename($dir)) {
-				$slug = basename(dirname($dir));
-			} elseif (in_array(basename(dirname($dir)), array('branches', 'tags'))) {
-				$slug = basename(dirname(dirname($dir)));
-			} else {
-				$slug = basename($dir);
-			}
+			$slug = $this->guess_plugin_slug($dir);
 		}
 		$main_file = $dir.'/'.$slug.'.php';
 		$source = $this->get_first_lines($main_file, $this->max_header_lines);
