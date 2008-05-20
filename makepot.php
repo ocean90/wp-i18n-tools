@@ -64,6 +64,7 @@ class MakePOT {
 		$long_options = array_map('escapeshellarg', $long_options);
 		$string_options = implode(" \\\n", $long_options);
 		// change dirs, so that we have nice relative references 
+		$old_dir = getcwd();
 		chdir($dir);
 		$cmd = "
 	find . -name '*.php' -print \\
@@ -72,6 +73,7 @@ class MakePOT {
 	| xargs xgettext \\
 	$string_options";
 		system($cmd, $exit_code);
+		chdir($old_dir);
 		return $exit_code;
 	}
 
