@@ -3,12 +3,12 @@ require_once 'makepot.php';
 
 $options = getopt("c:p:m:n:");
 
-$application_svn_checkout = $options['c'];
-$pot_svn_checkout = $options['p'];
+$application_svn_checkout = realpath($options['c']);
+$pot_svn_checkout = realpath($options['p']);
 $makepot_project = $options['m'];
 $pot_name = $options['n'];
 
-$makepot = new MakePOT;	
+$makepot = new MakePOT(false);	
 
 $versions = array();
 
@@ -19,17 +19,16 @@ $branches = glob('branches/*');
 if (false !== $branches) $versions = array_merge($versions, $branches);
 $tags = glob('tags/*');
 if (false !== $tags) $versions = array_merge($versions, $tags);
-print_r($versions);
 
 chdir($pot_svn_checkout);
+system("svn up");
 foreach($versions as $version) {
-	print "Processing $version (".getcwd().")\n";
 	$pot = "$version/$pot_name";
 	$exists = is_file($pot);
 	// do not update old tag pots
 	if ('tags/' == substr($version, 0, 5) && $exists) continue;
 	if (!is_dir($version)) system("svn mkdir $version");
-	call_user_func(array(&$makepot, $makepot_project), realpath("$application_svn_checkout/$version"), $pot);
+	call_user_func(array(&$makepot, $makepot_project), realpath("$application_svn_checkout/$version"), "$pot_svn_checkout/$pot");
 	if (!$exists) system("svn add $pot");
 	// do not commit if the difference is only in the header
 	// always commit a new file
