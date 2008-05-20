@@ -24,7 +24,14 @@ class MakePOT {
 		'wp' => array(
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
+			'package-version' => '{version}',
 		),
+		'bb' => array(
+			'copyright-holder' => 'bbPress',
+			'package-name' => 'bbPress',
+			'package-version' => '{version}',
+		),
+
 		'wp-plugin' => array(
 			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
 			'copyright-holder' => '{author}',
@@ -84,6 +91,17 @@ class MakePOT {
 		}
 		$output = is_null($output)? 'wordpress.pot' : $output;
 		return $this->xgettext('wp', $dir, $output, $placeholders);
+	}
+
+	function bb($dir, $output) {
+		$placeholders = array();
+		if (preg_match('/case\s+\'version\'.*?return\s+\'(.*?)\';/s', file_get_contents($dir.'/bb-includes/functions.php'), $matches)) {
+			print_r($matches);
+			$placeholders['version'] = $matches[1];
+		}
+		$output = is_null($output)? 'bbpress.pot' : $output;
+		return $this->xgettext('bb', $dir, $output, $placeholders);
+
 	}
 
 	function get_first_lines($filename, $lines = 30) {
