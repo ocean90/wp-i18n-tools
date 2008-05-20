@@ -96,7 +96,6 @@ class MakePOT {
 	function bb($dir, $output) {
 		$placeholders = array();
 		if (preg_match('/case\s+\'version\'.*?return\s+\'(.*?)\';/s', file_get_contents($dir.'/bb-includes/functions.php'), $matches)) {
-			print_r($matches);
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'bbpress.pot' : $output;
