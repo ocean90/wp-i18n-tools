@@ -7,6 +7,8 @@ class MakePOT {
 		'generic',
 		'wp',
 		'wp-plugin',
+		'bb',
+		'mu',
 	);
 
 	var $keywords = array(
@@ -92,6 +94,16 @@ class MakePOT {
 		$output = is_null($output)? 'wordpress.pot' : $output;
 		return $this->xgettext('wp', $dir, $output, $placeholders);
 	}
+
+	function mu($dir, $output) {
+		$placeholders = array();
+		if (preg_match('/\$wpmu_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
+			$placeholders['version'] = $matches[1];
+		}
+		$output = is_null($output)? 'wordpress.pot' : $output;
+		return $this->xgettext('wp', $dir, $output, $placeholders);
+	}
+
 
 	function bb($dir, $output) {
 		$placeholders = array();
