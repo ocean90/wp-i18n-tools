@@ -57,7 +57,6 @@ class PotExtMeta {
 	}
 }
 
-
 $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
 	$potextmeta = new PotExtMeta;
@@ -66,12 +65,5 @@ if ($included_files[0] == __FILE__) {
 	}
 	$potextmeta->append($argv[1], isset($argv[2])? $argv[2] : '-');
 }
-
-
-
-
-
-
-
 
 ?>
