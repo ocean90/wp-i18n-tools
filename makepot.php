@@ -12,7 +12,7 @@ class MakePOT {
 	);
 
 	var $keywords = array(
-		'__', '_e', '_c', '__ngettext:1,2',
+		'__', '_e', '_c', '__ngettext:1,2', '__n:1,2',
 		'__ngettext_noop:1,2', 
 	);
 
