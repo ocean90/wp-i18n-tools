@@ -51,10 +51,9 @@ function ignore_token($token, $s='') {
 	return '';
 }
 
-function make_string_aggregator($global_array_name) {
+function make_string_aggregator($global_array_name, $filename) {
 	$a = $global_array_name;
-	$GLOBALS[$a] = array();
-	return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, $line_number);');
+	return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, '.var_export($filename, true).', $line_number);');
 }
 
 function make_mo_replacer($global_mo_name) {
@@ -128,10 +127,10 @@ function command_extract() {
 
 	$global_name = '__entries_'.mt_rand(1, 1000);
 	$GLOBALS[$global_name] = array();
-	$aggregator = make_string_aggregator($global_name);
 
 	foreach($filenames as $filename) {
 		$tokens = token_get_all(file_get_contents($filename));
+		$aggregator = make_string_aggregator($global_name, $filename);
 		walk_tokens(&$tokens, 'ignore_token', 'ignore_token', $aggregator);
 	}
 
@@ -141,7 +140,8 @@ function command_extract() {
 	}
 
 	foreach($GLOBALS[$global_name] as $item) {
-		@list($string, $comment_id, $line_number) = $item;
+		@list($string, $comment_id, $filename, $line_number) = $item;
+		$filename = isset($filename)? preg_replace('|^\./|', '', $filename) : '';
 		$ref_line_number = isset($line_number)? ":$line_number" : '';
 		$args = array(
 			'singular' => $string,
