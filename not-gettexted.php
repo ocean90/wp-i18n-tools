@@ -127,7 +127,10 @@ class NotGettexted {
 	function command_extract() {
 		$args = func_get_args();
 		$pot_filename = $args[0];
-		$filenames = array_slice($args, 1);
+		if (isset($args[1]) && is_array($args[1]))
+			$filenames = $args[1];
+		else
+			$filenames = array_slice($args, 1);
 
 		$global_name = '__entries_'.mt_rand(1, 1000);
 		$GLOBALS[$global_name] = array();
@@ -161,7 +164,10 @@ class NotGettexted {
 	function command_replace() {
 		$args = func_get_args();
 		$mo_filename = $args[0];
-		$filenames = array_slice($args, 1);
+		if (isset($args[1]) && is_array($args[1]))
+			$filenames = $args[1];
+		else
+			$filenames = array_slice($args, 1);
 
 		$global_name = '__mo_'.mt_rand(1, 1000);
 		$GLOBALS[$global_name] = new MO();
@@ -178,6 +184,7 @@ class NotGettexted {
 			fwrite($f, $new_file);
 			fclose($f);
 		}
+		return true;
 	}
 
 	function usage() {

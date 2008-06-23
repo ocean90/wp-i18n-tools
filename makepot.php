@@ -1,4 +1,6 @@
 <?php
+require_once 'not-gettexted.php';
+
 class MakePOT {
 	var $use_advanced_xgettext_args = true;
 	var $max_header_lines = 30;
@@ -83,7 +85,24 @@ class MakePOT {
 	$string_options";
 		system($cmd, $exit_code);
 		chdir($old_dir);
-		return $exit_code;
+		return (bool)(0 == $exit_code);
+	}
+
+	function get_php_files($dir) {
+		$files = array();
+		$d = opendir($dir);
+		if (!$d) return false;
+		while(false !== ($item = readdir($d))) {
+			$full_item = $dir . '/' . $item;
+			if ('.' == $item || '..' == $item)
+				continue;
+			if ('.php' == substr($item, -4))
+				$files[] = $full_item; 
+			if (is_dir($full_item))
+				$files += array_merge($files, $this->get_php_files($full_item, $files));
+		}
+		closedir($d);
+		return $files;
 	}
 
 	function wp($dir, $output) {
@@ -92,7 +111,11 @@ class MakePOT {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress.pot' : $output;
-		return $this->xgettext('wp', $dir, $output, $placeholders);
+		$res = $this->xgettext('wp', $dir, $output, $placeholders);
+		if (!$res) return false;
+		$php_files = $this->get_php_files($dir);
+		$not_gettexted = & new NotGettexted;
+		return $not_gettexted->command_extract($output, $php_files);
 	}
 
 	function mu($dir, $output) {
@@ -182,8 +205,8 @@ if ($included_files[0] == __FILE__) {
 	$makepot = new MakePOT;
 	if ((3 == count($argv) || 4 == count($argv)) && in_array($method = str_replace('-', '_', $argv[1]), get_class_methods($makepot))) {
 		$res = call_user_func(array(&$makepot, $method), realpath($argv[2]), isset($argv[3])? $argv[3] : null);
-		if (0 != $res) {
-			fwrite(STDERR, "xgettext returned exit code $res!\n");
+		if (false === $res) {
+			fwrite(STDERR, "Couldn't generate POT file!\n");
 		}
 	} else {
 		$usage  = "Usage: php makepot.php PROJECT DIRECTORY [OUTPUT]\n\n";
