@@ -113,9 +113,14 @@ class MakePOT {
 		$output = is_null($output)? 'wordpress.pot' : $output;
 		$res = $this->xgettext('wp', $dir, $output, $placeholders);
 		if (!$res) return false;
-		$php_files = $this->get_php_files($dir);
+		$old_dir = getcwd();
+		$output = realpath($output);
+		chdir($dir);
+		$php_files = $this->get_php_files('.');
 		$not_gettexted = & new NotGettexted;
-		return $not_gettexted->command_extract($output, $php_files);
+		$res = $not_gettexted->command_extract($output, $php_files);
+		chdir($old_dir);
+		return $res;
 	}
 
 	function mu($dir, $output) {
