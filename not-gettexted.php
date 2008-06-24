@@ -8,9 +8,6 @@
  * @subpackage tools
  */
 
-error_reporting(E_ALL);
-
-
 // see: http://php.net/tokenizer
 if (!defined('T_ML_COMMENT'))
 	    define('T_ML_COMMENT', T_COMMENT);
@@ -229,6 +226,7 @@ class NotGettexted {
 // wasn't included
 $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
+	error_reporting(E_ALL);
 	$not_gettexted = & new NotGettexted;
 	$not_gettexted->cli();
 }
