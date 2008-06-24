@@ -113,6 +113,7 @@ class MakePOT {
 		$output = is_null($output)? 'wordpress.pot' : $output;
 		$res = $this->xgettext('wp', $dir, $output, $placeholders);
 		if (!$res) return false;
+		/* Add not-gettexted strings */
 		$old_dir = getcwd();
 		$output = realpath($output);
 		chdir($dir);
@@ -120,6 +121,9 @@ class MakePOT {
 		$not_gettexted = & new NotGettexted;
 		$res = $not_gettexted->command_extract($output, $php_files);
 		chdir($old_dir);
+		/* Adding non-gettexted strings can repeat some phrases */
+		$output_shell = escapeshellarg($output);
+		system("msguniq $output_shell -o $output_shell");
 		return $res;
 	}
 
