@@ -55,6 +55,24 @@ class NotGettexted {
 		return '';
 	}
 
+	function list_php_files($dir) {
+		$files = array();
+		$d = opendir($dir);
+		if (!$d) return false;
+		while(false !== ($item = readdir($d))) {
+			$full_item = $dir . '/' . $item;
+			if ('.' == $item || '..' == $item)
+				continue;
+			if ('.php' == substr($item, -4))
+				$files[] = $full_item; 
+			if (is_dir($full_item))
+				$files += array_merge($files, NotGettexted::list_php_files($full_item, $files));
+		}
+		closedir($d);
+		return $files;
+	}
+
+
 	function make_string_aggregator($global_array_name, $filename) {
 		$a = $global_array_name;
 		return create_function('$string, $comment_id, $line_number', 'global $'.$a.'; $'.$a.'[] = array($string, $comment_id, '.var_export($filename, true).', $line_number);');

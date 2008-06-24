@@ -88,23 +88,6 @@ class MakePOT {
 		return (bool)(0 == $exit_code);
 	}
 
-	function get_php_files($dir) {
-		$files = array();
-		$d = opendir($dir);
-		if (!$d) return false;
-		while(false !== ($item = readdir($d))) {
-			$full_item = $dir . '/' . $item;
-			if ('.' == $item || '..' == $item)
-				continue;
-			if ('.php' == substr($item, -4))
-				$files[] = $full_item; 
-			if (is_dir($full_item))
-				$files += array_merge($files, $this->get_php_files($full_item, $files));
-		}
-		closedir($d);
-		return $files;
-	}
-
 	function wp($dir, $output) {
 		$placeholders = array();
 		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
@@ -117,7 +100,7 @@ class MakePOT {
 		$old_dir = getcwd();
 		$output = realpath($output);
 		chdir($dir);
-		$php_files = $this->get_php_files('.');
+		$php_files = NotGettexted::list_php_files('.');
 		$not_gettexted = & new NotGettexted;
 		$res = $not_gettexted->command_extract($output, $php_files);
 		chdir($old_dir);
