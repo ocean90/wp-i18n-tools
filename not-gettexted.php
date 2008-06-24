@@ -72,11 +72,13 @@ class NotGettexted {
 		$current_string_line = 0;
 
 		$result = '';
+		$line = 1;
 
 		foreach($tokens as $token) {
 			if (is_array($token)) {
-				list($id, $text, $line) = $token;
-				if (T_ML_COMMENT == $id && preg_match('|/\*\s*(/?WP_I18N_[a-z_]+)\s*\*/|i', $text, $matches)) {
+				list($id, $text) = $token;
+				$line += substr_count($text, "\n");
+				if ((T_ML_COMMENT == $id || T_COMMENT == $id) && preg_match('|/\*\s*(/?WP_I18N_[a-z_]+)\s*\*/|i', $text, $matches)) {
 					if ($this->STAGE_OUTSIDE == $stage) {
 						$stage = $this->STAGE_START_COMMENT;
 						$current_comment_id = $matches[1];
@@ -138,7 +140,7 @@ class NotGettexted {
 		foreach($filenames as $filename) {
 			$tokens = token_get_all(file_get_contents($filename));
 			$aggregator = $this->make_string_aggregator($global_name, $filename);
-			$this->walk_tokens(&$tokens, array(&$this, 'ignore_token'), array(&$this, 'ignore_token'), $aggregator);
+			$this->walk_tokens($tokens, array(&$this, 'ignore_token'), array(&$this, 'ignore_token'), $aggregator);
 		}
 
 		$potf = '-' == $pot_filename? STDOUT : @fopen($pot_filename, 'a');
@@ -179,7 +181,7 @@ class NotGettexted {
 		}
 		foreach($filenames as $filename) {
 			$tokens = token_get_all(file_get_contents($filename));
-			$new_file = $this->walk_tokens(&$tokens, $replacer, array(&$this, 'unchanged_token'));
+			$new_file = $this->walk_tokens($tokens, $replacer, array(&$this, 'unchanged_token'));
 			$f = fopen($filename, 'w');
 			fwrite($f, $new_file);
 			fclose($f);
