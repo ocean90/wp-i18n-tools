@@ -28,12 +28,15 @@ foreach($versions as $version) {
 	// do not update old tag pots
 	if ('tags/' == substr($version, 0, 5) && $exists) continue;
 	if (!is_dir($version)) system("svn mkdir $version");
-	call_user_func(array(&$makepot, $makepot_project), realpath("$application_svn_checkout/$version"), "$pot_svn_checkout/$pot");
+	$real_application_svn_checkout = realpath($application_svn_checkout);
+	call_user_func(array(&$makepot, $makepot_project), "$real_application_svn_checkout/$version", "$pot_svn_checkout/$pot");
 	if (!$exists) system("svn add $pot");
 	// do not commit if the difference is only in the header
 	// always commit a new file
 	if (!$exists || `svn diff $pot | wc -l` > 13) {
-		system("svn ci $version --message='Automatic POT update'");
+		preg_match('/Revision:\s+(\d+)/', `svn info $real_application_svn_checkout/$version`, $matches);
+		$logmsg = isset($matches[1]) && intval($matches[1])? "Generated from r".intval($matches[1]) : 'Automatic POT update';
+		system("svn ci $version --message='$logmsg'");
 	}
 }
 
