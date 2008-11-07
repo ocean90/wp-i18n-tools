@@ -11,6 +11,7 @@ class MakePOT {
 		'wp-plugin',
 		'bb',
 		'mu',
+		'bp',
 	);
 
 	var $keywords = array(
@@ -41,6 +42,9 @@ class MakePOT {
 			'copyright-holder' => '{author}',
 			'package-name' => '{plugin-name}',
 			'package-version' => '{version}',
+		),
+		'bp' => array(
+			'package-name' => 'BuddyPress',
 		),
 	);
 
@@ -187,6 +191,10 @@ class MakePOT {
 		return $this->xgettext('wp-plugin', $dir, $output, $placeholders);
 	}
 
+	function bp($dir, $output) {
+		$output = is_null($output)? "buddypress.pot" : $output;
+		return $this->xgettext('bp', $dir, $output, array());
+	}
 
 }
 
