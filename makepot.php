@@ -34,7 +34,6 @@ class MakePOT {
 		'bb' => array(
 			'copyright-holder' => 'bbPress',
 			'package-name' => 'bbPress',
-			'package-version' => '{version}',
 		),
 
 		'wp-plugin' => array(
@@ -126,9 +125,6 @@ class MakePOT {
 
 	function bb($dir, $output) {
 		$placeholders = array();
-		if (preg_match('/case\s+\'version\'.*?return\s+\'(.*?)\';/s', file_get_contents($dir.'/bb-includes/functions.php'), $matches)) {
-			$placeholders['version'] = $matches[1];
-		}
 		$output = is_null($output)? 'bbpress.pot' : $output;
 		return $this->xgettext('bb', $dir, $output, $placeholders);
 
