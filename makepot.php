@@ -15,8 +15,8 @@ class MakePOT {
 	);
 
 	var $keywords = array(
-		'__', '_e', '_c', '__ngettext:1,2', '__n:1,2',
-		'__ngettext_noop:1,2', 
+		'__', '_e', '_c', '__ngettext:1,2', '_n:1,2', '_nc:1,2',
+		'__ngettext_noop:1,2', '_n_noop:1,2', 
 	);
 
 	var $xgettext_options = array(
