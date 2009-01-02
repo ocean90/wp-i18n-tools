@@ -1,12 +1,13 @@
 <?php
 require_once 'makepot.php';
 
-$options = getopt("c:p:m:n:");
+$options = getopt("c:p:m:n:s");
 
 $application_svn_checkout = realpath($options['c']);
 $pot_svn_checkout = realpath($options['p']);
 $makepot_project = $options['m'];
 $pot_name = $options['n'];
+$no_branch_dirs = isset($options['s']);
 
 $makepot = new MakePOT(false);	
 
@@ -20,6 +21,9 @@ if (false !== $branches) $versions = array_merge($versions, $branches);
 $tags = glob('tags/*');
 if (false !== $tags) $versions = array_merge($versions, $tags);
 
+if ($no_branch_dirs)
+	$versions = array('.');
+
 chdir($pot_svn_checkout);
 system("svn up");
 foreach($versions as $version) {
@@ -31,8 +35,7 @@ foreach($versions as $version) {
 	$real_application_svn_checkout = realpath($application_svn_checkout);
 	call_user_func(array(&$makepot, $makepot_project), "$real_application_svn_checkout/$version", "$pot_svn_checkout/$pot");
 	if (!$exists) system("svn add $pot");
-	// do not commit if the difference is only in the header
-	// always commit a new file
+	// do not commit if the difference is only in the header, but always commit a new file
 	if (!$exists || `svn diff $pot | wc -l` > 13) {
 		preg_match('/Revision:\s+(\d+)/', `svn info $real_application_svn_checkout/$version`, $matches);
 		$logmsg = isset($matches[1]) && intval($matches[1])? "POT, generated from r".intval($matches[1]) : 'Automatic POT update';

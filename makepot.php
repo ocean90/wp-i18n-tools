@@ -43,6 +43,7 @@ class MakePOT {
 			'package-version' => '{version}',
 		),
 		'bp' => array(
+			'copyright-holder' => 'BuddyPress',
 			'package-name' => 'BuddyPress',
 		),
 	);
