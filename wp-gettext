@@ -21,6 +21,8 @@ find . -name '*.php' -print \
 	--keyword=_nc:1,2 \
 	--keyword=__ngettext_noop:1,2 \
 	--keyword=_n_noop:1,2 \
+	--keyword=_x:1c,
+	--keyword=_nx:1,2,4c,
     --default-domain=wordpress \
     --language=php \
     --output="$cwd/$TEMPLATE" \

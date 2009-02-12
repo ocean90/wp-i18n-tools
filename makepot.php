@@ -15,8 +15,10 @@ class MakePOT {
 	);
 
 	var $keywords = array(
-		'__', '_e', '_c', '__ngettext:1,2', '_n:1,2', '_nc:1,2',
-		'__ngettext_noop:1,2', '_n_noop:1,2', 
+		'__', '_e', '_c',
+		'__ngettext:1,2', '_n:1,2', '_nc:1,2',
+		'__ngettext_noop:1,2', '_n_noop:1,2',
+		'_x:1c', '_nx:1,2,4c',
 	);
 
 	var $xgettext_options = array(
@@ -24,6 +26,7 @@ class MakePOT {
 			'from-code' => 'utf-8',
 			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com', 
 			'language' => 'php',
+			'add-comments' => 'translators',
 		),
 		'generic' => array(),
 		'wp' => array(
