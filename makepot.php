@@ -1,5 +1,6 @@
 <?php
 require_once 'not-gettexted.php';
+require_once 'pot-ext-meta.php';
 
 class MakePOT {
 	var $use_advanced_xgettext_args = true;
@@ -139,8 +140,8 @@ class MakePOT {
 		if (!$extf) return false;
 		$first_lines = '';
 		foreach(range(1, $lines) as $x) {
-			if (feof($extf)) break;
 			$line = fgets($extf);
+			if (feof($extf)) break;
 			if (false === $line) {
 				return false;
 			}
@@ -188,7 +189,14 @@ class MakePOT {
 		$placeholders['slug'] = $slug;
 
 		$output = is_null($output)? "$slug.pot" : $output;
-		return $this->xgettext('wp-plugin', $dir, $output, $placeholders);
+		$res = $this->xgettext('wp-plugin', $dir, $output, $placeholders);
+		if (!$res) return false;
+	    $potextmeta = new PotExtMeta;
+	    $res = $potextmeta->append($main_file, $output);
+		/* Adding non-gettexted strings can repeat some phrases */
+		$output_shell = escapeshellarg($output);
+		system("msguniq $output_shell -o $output_shell");
+		return $res;
 	}
 
 	function bp($dir, $output) {
