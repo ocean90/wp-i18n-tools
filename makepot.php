@@ -20,6 +20,7 @@ class MakePOT {
 		'__ngettext:1,2', '_n:1,2', '_nc:1,2',
 		'__ngettext_noop:1,2', '_n_noop:1,2',
 		'_x:1,2c', '_nx:1,2,4c', '_nx_noop:1,2,3c',
+		'_a', '_ea', '_ax:1,2c',
 	);
 
 	var $xgettext_options = array(
