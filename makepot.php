@@ -9,6 +9,7 @@ class MakePOT {
 	var $projects = array(
 		'generic',
 		'wp',
+		'wp-tz',
 		'wp-plugin',
 		'bb',
 		'mu',
@@ -26,7 +27,7 @@ class MakePOT {
 	var $xgettext_options = array(
 		'default' => array(
 			'from-code' => 'utf-8',
-			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com', 
+			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com',
 			'language' => 'php',
 			'add-comments' => 'translators',
 		),
@@ -61,7 +62,7 @@ class MakePOT {
 		return realpath(dirname($path)).DIRECTORY_SEPARATOR.basename($path);
 	}
 
-	function xgettext($project, $dir, $output_file, $placeholders = array()) {
+	function xgettext($project, $dir, $output_file, $placeholders = array(), $excludes = array(), $includes = array()) {
 
 		$options = array_merge($this->xgettext_options['default'], $this->xgettext_options[$project]);
 		$options['output'] = $this->realpath_missing($output_file);
@@ -82,16 +83,22 @@ class MakePOT {
 		foreach($options as $key => $value)
 			$long_options[] = is_string($value)? "--$key=$value" : "--$key";
 		$long_options = array_map('escapeshellarg', $long_options);
-		$string_options = implode(" \\\n", $long_options);
+		$xgettext_options_str = implode(" \\\n", $long_options);
 		// change dirs, so that we have nice relative references 
 		$old_dir = getcwd();
 		chdir($dir);
+		
+		$excludes_str = implode("\n", array_map(create_function('$x', 'return "-and ! -path ".escapeshellarg("./".$x)." \\\\";'), $excludes));
+		$includes_str = implode("\n", array_map(create_function('$x', 'return "-and -path ".escapeshellarg("./".$x)." \\\\";'), $includes));
+		if ($excludes_str) $excludes_str = "\n\t\t".$excludes_str;
+		if ($includes_str) $includes_str = "\n\t\t".$includes_str;
 		$cmd = "
-	find . -name '*.php' -print \\
+	find . -name '*.php' \\$excludes_str$includes_str
+	-print \\
 	| sed -e 's,^\./,,' \\
 	| sort \\
 	| xargs xgettext \\
-	$string_options";
+	$xgettext_options_str";
 		system($cmd, $exit_code);
 		chdir($old_dir);
 		return (bool)(0 == $exit_code);
@@ -103,7 +110,7 @@ class MakePOT {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress.pot' : $output;
-		$res = $this->xgettext('wp', $dir, $output, $placeholders);
+		$res = $this->xgettext('wp', $dir, $output, $placeholders, array('wp-admin/includes/continents-cities.php'));
 		if (!$res) return false;
 		/* Add not-gettexted strings */
 		$old_dir = getcwd();
@@ -118,6 +125,16 @@ class MakePOT {
 		system("msguniq $output_shell -o $output_shell");
 		return $res;
 	}
+	
+	function wp_tz($dir, $output) {
+		$placeholders = array();
+		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
+			$placeholders['version'] = $matches[1];
+		}
+		$output = is_null($output)? 'wordpress-continents-cities.pot' : $output;
+		return $this->xgettext('wp', $dir, $output, $placeholders, array(), array('wp-admin/includes/continents-cities.php'));
+	}
+	
 
 	function mu($dir, $output) {
 		$placeholders = array();
@@ -162,7 +179,7 @@ class MakePOT {
 	function generic($dir, $output) {
 		$output = is_null($output)? "generic.pot" : $output;
 		return $this->xgettext('generic', $dir, $output, array());
-	} 
+	}
 
 	function guess_plugin_slug($dir) {
 		if ('trunk' == basename($dir)) {
