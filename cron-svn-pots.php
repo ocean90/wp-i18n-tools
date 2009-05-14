@@ -5,11 +5,11 @@ $options = getopt("c:p:m:n:s");
 
 $application_svn_checkout = realpath($options['c']);
 $pot_svn_checkout = realpath($options['p']);
-$makepot_project = $options['m'];
+$makepot_project = str_replace('-', '_', $options['m']);
 $pot_name = $options['n'];
 $no_branch_dirs = isset($options['s']);
 
-$makepot = new MakePOT(false);	
+$makepot = new MakePOT(false);
 
 $versions = array();
 
