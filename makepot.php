@@ -11,6 +11,7 @@ class MakePOT {
 		'wp',
 		'wp-tz',
 		'wp-plugin',
+		'wp-theme',
 		'bb',
 		'mu',
 		'bp',
@@ -41,11 +42,16 @@ class MakePOT {
 			'copyright-holder' => 'bbPress',
 			'package-name' => 'bbPress',
 		),
-
 		'wp-plugin' => array(
 			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
 			'copyright-holder' => '{author}',
-			'package-name' => '{plugin-name}',
+			'package-name' => '{name}',
+			'package-version' => '{version}',
+		),
+		'wp-theme' => array(
+			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
+			'copyright-holder' => '{author}',
+			'package-name' => '{name}',
 			'package-version' => '{version}',
 		),
 		'bp' => array(
@@ -203,7 +209,7 @@ class MakePOT {
 
 		$placeholders['version'] = $this->get_addon_header('Version', $source);
 		$placeholders['author'] = $this->get_addon_header('Author', $source);
-		$placeholders['plugin-name'] = $this->get_addon_header('Plugin Name', $source);
+		$placeholders['name'] = $this->get_addon_header('Plugin Name', $source);
 		$placeholders['slug'] = $slug;
 
 		$output = is_null($output)? "$slug.pot" : $output;
@@ -217,6 +223,31 @@ class MakePOT {
 		return $res;
 	}
 
+	function wp_theme($dir, $output, $slug = null) {
+		$placeholders = array();
+		// guess plugin slug
+		if (is_null($slug)) {
+			$slug = $this->guess_plugin_slug($dir);
+		}
+		$main_file = $dir.'/style.css';
+		$source = $this->get_first_lines($main_file, $this->max_header_lines);
+
+		$placeholders['version'] = $this->get_addon_header('Version', $source);
+		$placeholders['author'] = $this->get_addon_header('Author', $source);
+		$placeholders['name'] = $this->get_addon_header('Theme Name', $source);
+		$placeholders['slug'] = $slug;
+
+		$output = is_null($output)? "$slug.pot" : $output;
+		$res = $this->xgettext('wp-theme', $dir, $output, $placeholders);
+		if (!$res) return false;
+	    $potextmeta = new PotExtMeta;
+	    $res = $potextmeta->append($main_file, $output);
+		/* Adding non-gettexted strings can repeat some phrases */
+		$output_shell = escapeshellarg($output);
+		system("msguniq $output_shell -o $output_shell");
+		return $res;
+	}
+	
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
 		return $this->xgettext('bp', $dir, $output, array());
