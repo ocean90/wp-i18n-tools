@@ -39,7 +39,7 @@ foreach($versions as $version) {
 	if (!$exists || `svn diff $pot | wc -l` > 13) {
 		preg_match('/Revision:\s+(\d+)/', `svn info $real_application_svn_checkout/$version`, $matches);
 		$logmsg = isset($matches[1]) && intval($matches[1])? "POT, generated from r".intval($matches[1]) : 'Automatic POT update';
-		system("svn ci $version --message='$logmsg'");
+		system("svn ci $pot --message='$logmsg'");
 	}
 }
 
