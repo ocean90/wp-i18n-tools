@@ -23,6 +23,7 @@ class MakePOT {
 		'__ngettext_noop:1,2', '_n_noop:1,2',
 		'_x:1,2c', '_nx:1,2,4c', '_nx_noop:1,2,3c',
 		'esc_attr__', 'esc_attr_e', 'esc_attr_x:1,2c',
+		'esc_html__', 'esc_html_e', 'esc_html_x:1,2c',
 	);
 
 	var $xgettext_options = array(

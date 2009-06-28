@@ -2,6 +2,15 @@
 require_once 'makepot.php';
 
 $options = getopt("c:p:m:n:s");
+if (empty($options)) {
+?>
+	-c	Application svn checkout
+	-p	POT svn checkout
+	-m	MakePOT project
+	-n	POT filename
+<?php
+	die;
+}
 
 $application_svn_checkout = realpath($options['c']);
 $pot_svn_checkout = realpath($options['p']);
