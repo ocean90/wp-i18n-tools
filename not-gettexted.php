@@ -7,15 +7,14 @@
  * @package wordpress-i18n
  * @subpackage tools
  */
-
 // see: http://php.net/tokenizer
 if (!defined('T_ML_COMMENT'))
 	    define('T_ML_COMMENT', T_COMMENT);
 else
 	    define('T_DOC_COMMENT', T_ML_COMMENT);
 
-require_once 'pomo/po.php';
-require_once 'pomo/mo.php';
+require_once dirname( __FILE__ ) . '/pomo/po.php';
+require_once dirname( __FILE__ ) . '/pomo/mo.php';
 
 class NotGettexted {
 	var $enable_logging = false;
