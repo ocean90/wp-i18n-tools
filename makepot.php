@@ -113,7 +113,9 @@ class MakePOT {
 
 	function wp($dir, $output) {
 		$placeholders = array();
-		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
+		$version_php = $dir.'/wp-includes/version.php';
+		if (!is_readable($version_php)) return false;
+		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($version_php), $matches)) {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress.pot' : $output;
