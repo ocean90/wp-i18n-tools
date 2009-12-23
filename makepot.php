@@ -3,7 +3,6 @@ require_once 'not-gettexted.php';
 require_once 'pot-ext-meta.php';
 
 class MakePOT {
-	var $use_advanced_xgettext_args = true;
 	var $max_header_lines = 30;
 
 	var $projects = array(
@@ -32,37 +31,51 @@ class MakePOT {
 			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com',
 			'language' => 'php',
 			'add-comments' => 'translators',
+			'year' => '', // to be set in constructor
 		),
 		'generic' => array(),
 		'wp' => array(
+			'description' => 'Translation of WordPress {version}',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
 		),
 		'bb' => array(
+			'description' => 'Translation of bbPress',
 			'copyright-holder' => 'bbPress',
 			'package-name' => 'bbPress',
 		),
 		'wp-plugin' => array(
+			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
 			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
 		),
 		'wp-theme' => array(
+			'description' => 'Translation of the WordPress theme {name} {version} by {author}',
 			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
 		),
 		'bp' => array(
+			'description' => 'Translation of BuddyPress',
 			'copyright-holder' => 'BuddyPress',
 			'package-name' => 'BuddyPress',
 		),
 	);
+	
+	var $manual_options = array(
+		'copyright-holder' => "THE PACKAGE'S COPYRIGHT HOLDER",
+		'package-name' => 'PACKAGE',
+		'package-version' => 'VERSION',
+		'year' => 'YEAR',
+		'description' => 'SOME DESCRIPTIVE TITLE',
+	);
 
-	function MakePOT($use_advanced_xgettext_args = true) {
-		$this->use_advanced_xgettext_args = $use_advanced_xgettext_args;
+	function MakePOT($deprecated = true) {
+		$this->xgettext_options['default']['year'] = date('Y');
 	}
 
 	function realpath_missing($path) {
@@ -76,12 +89,13 @@ class MakePOT {
 
 		$placeholder_keys = array_map(create_function('$x', 'return "{".$x."}";'), array_keys($placeholders));
 		$placeholder_values = array_values($placeholders);
-		foreach($options as $key => $value)
+		foreach($options as $key => $value) {
 			$options[$key] = str_replace($placeholder_keys, $placeholder_values, $value);
-
-		if (!$this->use_advanced_xgettext_args) {
-			unset($options['package-name']);
-			unset($options['package-version']);
+		}
+		$manual_options = array();
+		foreach(array_keys($this->manual_options) as $key) {
+			$manual_options[$key] = $options[$key];
+			unset($options[$key]);
 		}
 
 		$long_options = array();
@@ -108,7 +122,21 @@ class MakePOT {
 	$xgettext_options_str";
 		system($cmd, $exit_code);
 		chdir($old_dir);
-		return (bool)(0 == $exit_code);
+		if (0 !== $exit_code) {
+			return false;
+		}
+
+		$old_first_lines = $first_lines = $this->get_first_lines( $options['output'], 30 );
+		$first_lines = str_replace('CHARSET', 'utf-8', $first_lines);
+		foreach($this->manual_options as $key => $pot_placeholder) {
+			$first_lines = str_replace($pot_placeholder, $manual_options[$key], $first_lines);
+		}
+		$pot = file_get_contents( $options['output'] );
+		$pot = str_replace($old_first_lines, $first_lines, $pot);
+		if (!file_put_contents($options['output'], $pot)) {
+			return false;
+		}
+		return true;
 	}
 
 	function wp($dir, $output) {
