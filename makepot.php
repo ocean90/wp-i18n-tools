@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 require_once 'not-gettexted.php';
 require_once 'pot-ext-meta.php';
@@ -304,7 +305,3 @@ if ($included_files[0] == __FILE__) {
 		exit(1);
 	}
 }
-
-
-
-?>
