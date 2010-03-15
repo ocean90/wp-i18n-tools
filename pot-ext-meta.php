@@ -39,7 +39,7 @@ class PotExtMeta {
 			if (!$string) continue;
 			$args = array(
 				'singular' => $string,
-				'extracted_comments' => $header.' of a plugin/theme',
+				'extracted_comments' => $header.' of the plugin/theme',
 			);
 			$entry = new Translation_Entry($args);
 			$pot .= "\n".PO::export_entry($entry)."\n";
