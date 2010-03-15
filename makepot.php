@@ -281,7 +281,7 @@ class MakePOT {
 	
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
-		return $this->xgettext('bp', $dir, $output, array());
+		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/*'));
 	}
 
 }
