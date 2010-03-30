@@ -1,8 +1,24 @@
 <?php
 require_once 'makepot.php';
 
+function silent_system( $command ) {
+	global $at_least_one_error;	
+	ob_start();
+	system( "$command 2>&1", $exit_code );
+	$output = ob_get_contents();
+	ob_end_clean();
+	if ( $exit_code != 0 ) {
+		echo "ERROR:\t$command\nCODE:\t$exit_code\nOUTPUT:\n";
+		echo $output."\n";
+	} else {
+		echo "OK:\t$command\n";		
+	}	
+	return $exit_code;
+}
+
+
 $options = getopt( 'c:p:m:n:sa:b:' );
-if ( empty( $options) ) {
+if ( empty( $options ) ) {
 ?>
 	-c	Application svn checkout
 	-p	POT svn checkout
@@ -26,7 +42,8 @@ $makepot = new MakePOT;
 $versions = array();
 
 chdir( $application_svn_checkout );
-system( 'svn up' );
+$exit = silent_system( 'svn up' );
+if ( 0 != $exit ) die();
 if ( is_dir( 'trunk' ) ) $versions[] = 'trunk';
 $branches = glob( 'branches/*' );
 if ( false !== $branches ) $versions = array_merge( $versions, $branches );
@@ -38,7 +55,10 @@ if ( $no_branch_dirs ) {
 }
 
 chdir( $pot_svn_checkout );
-if ( $application_svn_checkout != $pot_svn_checkout) system( 'svn up' );
+if ( $application_svn_checkout != $pot_svn_checkout) {
+	$exit = silent_system( 'svn up' );
+	if ( 0 != $exit ) die();
+}
 $real_application_svn_checkout = realpath( $application_svn_checkout );
 foreach( $versions as $version ) {
 	$application_path = "$real_application_svn_checkout/$version{$relative_application_path}";
@@ -47,15 +67,21 @@ foreach( $versions as $version ) {
 	$exists = is_file( $pot );
 	// do not update old tag pots
 	if ( 'tags/' == substr( $version, 0, 5 ) && $exists ) continue;
-	if ( !is_dir( $version ) ) system( "svn mkdir $version" );
+	if ( !is_dir( $version ) ) {
+		$exit = silent_system( "svn mkdir $version" );
+		if ( 0 != $exit ) continue;
+	}
 	if ( !is_dir(dirname("$pot_svn_checkout/$pot")) ) continue;
 	call_user_func( array( &$makepot, $makepot_project ), $application_path, "$pot_svn_checkout/$pot" );
-	if ( !$exists ) system( "svn add $pot" );
+	if ( !$exists ) {
+		$exit = silent_system( "svn add $pot" );
+		if ( 0 != $exit ) continue;
+	}
 	// do not commit if the difference is only in the header, but always commit a new file
 	if ( !$exists || `svn diff $pot | wc -l` > 13 ) {
 		preg_match( '/Revision:\s+(\d+)/', `svn info $application_path`, $matches );
 		$logmsg = isset( $matches[1] ) && intval( $matches[1] )? "POT, generated from r".intval( $matches[1] ) : 'Automatic POT update';
 		$target = $exists? $pot : $version;
-		system( "svn ci $target --message='$logmsg'" );
+		silent_system( "svn ci $target --message='$logmsg'" );
 	}
 }
