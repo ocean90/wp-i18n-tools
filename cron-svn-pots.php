@@ -86,6 +86,7 @@ foreach( $versions as $version ) {
 	}
 	if ( !is_dir(dirname("$pot_svn_checkout/$pot")) ) continue;
 	call_user_func( array( &$makepot, $makepot_project ), $application_path, "$pot_svn_checkout/$pot" );
+	if ( !file_exists( "$pot_svn_checkout/$pot" ) ) continue; 
 	if ( !$exists ) {
 		$exit = silent_system( "$svn add $pot" );
 		if ( 0 != $exit ) continue;
