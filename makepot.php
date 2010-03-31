@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 require_once 'not-gettexted.php';
 require_once 'pot-ext-meta.php';
