@@ -168,14 +168,14 @@ class MakePOT {
 	}
 	
 	function wp_tz($dir, $output) {
-		$continents_path = 'wp-admin/includes/continents-cities.php';
 		$placeholders = array();
+		$continents_path = 'wp-admin/includes/continents-cities.php';
+		if (!file_exists("$dir/$continents_path")) return false;
 		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress-continents-cities.pot' : $output;
 		
-		if (!file_exists("$dir/$continents_path")) return false;
 		return $this->xgettext('wp', $dir, $output, $placeholders, array(), array($continents_path));
 	}
 	
