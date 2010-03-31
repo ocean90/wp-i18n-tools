@@ -2,6 +2,10 @@
 require_once 'not-gettexted.php';
 require_once 'pot-ext-meta.php';
 
+if ( !defined( 'STDERR' ) ) {
+	define( 'STDERR', fopen( 'php://stderr', 'w' ) );
+}
+
 class MakePOT {
 	var $max_header_lines = 30;
 
@@ -164,12 +168,15 @@ class MakePOT {
 	}
 	
 	function wp_tz($dir, $output) {
+		$continents_path = 'wp-admin/includes/continents-cities.php';
 		$placeholders = array();
 		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress-continents-cities.pot' : $output;
-		return $this->xgettext('wp', $dir, $output, $placeholders, array(), array('wp-admin/includes/continents-cities.php'));
+		
+		if (!file_exists("$dir/$continents_path")) return false;
+		return $this->xgettext('wp', $dir, $output, $placeholders, array(), array($continents_path));
 	}
 	
 
