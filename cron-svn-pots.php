@@ -17,7 +17,7 @@ function silent_system( $command ) {
 }
 
 
-$options = getopt( 'c:p:m:n:sa:b:u:w:' );
+$options = getopt( 'c:p:m:n:sa:b:u:w:d' );
 if ( empty( $options ) ) {
 ?>
 	-c	Application svn checkout
@@ -28,6 +28,7 @@ if ( empty( $options ) ) {
 	-b	Relative patch of POT dir inside version dir in -p
 	-u	SVN username (optional)
 	-w	SVN password (optional)
+	-d	Dry-run
 <?php
 	die;
 }
@@ -96,6 +97,10 @@ foreach( $versions as $version ) {
 		$logmsg = isset( $matches[1] ) && intval( $matches[1] )? "POT, generated from r".intval( $matches[1] ) : 'Automatic POT update';
 		$target = $exists? $pot : $version;
 		$svn_args_str = implode( ' ', array_map( 'escapeshellarg', $svn_args ) );
-		silent_system( "$svn ci $target --non-interactive --message='$logmsg' $svn_args_str" );
+		$command = "$svn ci $target --non-interactive --message='$logmsg' $svn_args_str";
+		if ( !$dry_run )
+			silent_system( $command );
+		else
+			echo "CMD:\t$command\n";
 	}
 }
