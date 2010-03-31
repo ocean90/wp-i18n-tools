@@ -148,7 +148,7 @@ class MakePOT {
 			$placeholders['version'] = $matches[1];
 		}
 		$output = is_null($output)? 'wordpress.pot' : $output;
-		$res = $this->xgettext('wp', $dir, $output, $placeholders, array('wp-admin/includes/continents-cities.php'));
+		$res = $this->xgettext('wp', $dir, $output, $placeholders, array('wp-admin/includes/continents-cities.php', 'wp-content/themes/twentyten/*'));
 		if (!$res) return false;
 		/* Add not-gettexted strings */
 		$old_dir = getcwd();
