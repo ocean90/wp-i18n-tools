@@ -9,10 +9,17 @@
  */
 error_reporting(E_ALL);
 
+require_once dirname( __FILE__ ) . '/makepot.php';
+
 class AddTextdomain {
 
 	var $modified_contents = '';
-	var $funcs = array('__', '_e', '_c', '__ngettext');
+	var $funcs;
+
+	function AddTextdomain() {
+		$makepot = new MakePOT;
+		$this->funcs = array_map( create_function( '$x', '$parts = explode(":", $x); return $parts[0];' ), $makepot->keywords );
+	}
 
 	function usage() {
 		$usage = "Usage: php add-textdomain.php [-i] <domain> <file>\n\nAdds the string <domain> as a last argument to all i18n function calls in <file>\nand prints the modified php file on standard output.\n\nOptions:\n    -i    Modifies the PHP file in place, instead of printing it to standard output.\n";
