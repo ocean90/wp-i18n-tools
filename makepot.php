@@ -11,7 +11,8 @@ class MakePOT {
 
 	var $projects = array(
 		'generic',
-		'wp',
+		'wp-core',
+		'wp-ms',
 		'wp-tz',
 		'wp-plugin',
 		'wp-theme',
@@ -28,6 +29,8 @@ class MakePOT {
 		'esc_attr__', 'esc_attr_e', 'esc_attr_x:1,2c',
 		'esc_html__', 'esc_html_e', 'esc_html_x:1,2c',
 	);
+	
+	var $ms_files = array('ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php');
 
 	var $xgettext_options = array(
 		'default' => array(
@@ -38,12 +41,24 @@ class MakePOT {
 			'year' => '', // to be set in constructor
 		),
 		'generic' => array(),
-		'wp' => array(
+		'wp-core' => array(
 			'description' => 'Translation of WordPress {version}',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
 		),
+		'wp-ms' => array(
+			'description' => 'Translation of multisite strings in WordPress {version}',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress',
+			'package-version' => '{version}',
+		),		
+		'wp-tz' => array(
+			'description' => 'Translation of timezone strings in WordPress {version}',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress',
+			'package-version' => '{version}',
+		),		
 		'bb' => array(
 			'description' => 'Translation of bbPress',
 			'copyright-holder' => 'bbPress',
@@ -113,10 +128,10 @@ class MakePOT {
 		$old_dir = getcwd();
 		chdir($dir);
 		
-		$excludes_str = implode("\n", array_map(create_function('$x', 'return "-and ! -path ".escapeshellarg("./".$x)." \\\\";'), $excludes));
-		$includes_str = implode("\n", array_map(create_function('$x', 'return "-and -path ".escapeshellarg("./".$x)." \\\\";'), $includes));
-		if ($excludes_str) $excludes_str = "\n\t\t".$excludes_str;
-		if ($includes_str) $includes_str = "\n\t\t".$includes_str;
+		$excludes_str = implode("\n-and ", array_map(create_function('$x', 'return "! -path ".escapeshellarg("./".$x)." \\\\";'), $excludes));
+		$includes_str = implode("\n-or ", array_map(create_function('$x', 'return "-path ".escapeshellarg("./".$x)." \\\\";'), $includes));
+		if ($excludes_str) $excludes_str = "\n\t\t -and \\( " . $excludes_str . "\n\\) \\";
+		if ($includes_str) $includes_str = "\n\t\t -and \\( " . $includes_str . "\n\\) \\";
 		$cmd = "
 	find . -name '*.php' \\$excludes_str$includes_str
 	-print \\
@@ -127,6 +142,7 @@ class MakePOT {
 		system($cmd, $exit_code);
 		chdir($old_dir);
 		if (0 !== $exit_code) {
+			error_log("xgettext exited with exit code $exit_code.");
 			return false;
 		}
 
@@ -143,40 +159,92 @@ class MakePOT {
 		return true;
 	}
 
-	function wp($dir, $output) {
+	function wp_generic($dir, $args) {
+		$defaults = array(
+			'project' => 'wp-core',
+			'output' => null,
+			'default_output' => 'wordpress.pot',
+			'includes' => array(),
+			'excludes' => array_merge(
+				array('wp-admin/includes/continents-cities.php', 'wp-content/themes/twentyten/*'),
+				$this->ms_files
+			),
+			'extract_not_gettexted' => true,
+			'not_gettexted_files_filter' => array( &$this, 'is_not_ms_file' ),
+		);
+		$args = array_merge( $defaults, $args );
+		extract( $args );
 		$placeholders = array();
-		$version_php = $dir.'/wp-includes/version.php';
-		if (!is_readable($version_php)) return false;
-		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($version_php), $matches)) {
-			$placeholders['version'] = $matches[1];
+		if ( $wp_version = $this->wp_version( $dir ) ) $placeholders['version'] = $wp_version;
+		$output = is_null( $output )? $default_output : $output;		
+		$res = $this->xgettext( $project, $dir, $output, $placeholders, $excludes, $includes );
+		if ( !$res ) return false;
+		
+		if ( $extract_not_gettexted ) {
+			$old_dir = getcwd();
+			$output = realpath( $output );
+			chdir( $dir );
+			$php_files = NotGettexted::list_php_files('.');
+			$php_files = array_filter( $php_files, $not_gettexted_files_filter );
+			$not_gettexted = & new NotGettexted;
+			$res = $not_gettexted->command_extract( $output, $php_files );
+			chdir( $old_dir );
+			/* Adding non-gettexted strings can repeat some phrases */
+			$output_shell = escapeshellarg( $output );
+			system( "msguniq --use-first $output_shell -o $output_shell" );
 		}
-		$output = is_null($output)? 'wordpress.pot' : $output;
-		$res = $this->xgettext('wp', $dir, $output, $placeholders, array('wp-admin/includes/continents-cities.php', 'wp-content/themes/twentyten/*'));
-		if (!$res) return false;
-		/* Add not-gettexted strings */
-		$old_dir = getcwd();
-		$output = realpath($output);
-		chdir($dir);
-		$php_files = NotGettexted::list_php_files('.');
-		$not_gettexted = & new NotGettexted;
-		$res = $not_gettexted->command_extract($output, $php_files);
-		chdir($old_dir);
-		/* Adding non-gettexted strings can repeat some phrases */
-		$output_shell = escapeshellarg($output);
-		system("msguniq $output_shell -o $output_shell");
 		return $res;
 	}
 	
-	function wp_tz($dir, $output) {
-		$placeholders = array();
-		$continents_path = 'wp-admin/includes/continents-cities.php';
-		if (!file_exists("$dir/$continents_path")) return false;
-		if (preg_match('/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
-			$placeholders['version'] = $matches[1];
+	function wp_core($dir, $output) {
+		return $this->wp_generic( $dir, array(
+			'project' => 'wp-core', 'output' => $output,
+		) );
+	}
+	
+	function wp_ms($dir, $output) {
+		$core_pot = tempnam( sys_get_temp_dir(), 'wordpress.pot');
+		if ( false === $core_pot ) return false;
+		$core_result = $this->wp_core( $dir, $core_pot );
+		if ( !$core_result ) {
+			unlink( $core_pot );
+			return false;
 		}
-		$output = is_null($output)? 'wordpress-continents-cities.pot' : $output;
-		
-		return $this->xgettext('wp', $dir, $output, $placeholders, array(), array($continents_path));
+		$ms_result = $this->wp_generic( $dir, array(
+			'project' => 'wp-ms', 'output' => $output,
+			'includes' => $this->ms_files, 'excludes' => array(),
+			'default_output' => 'wordpress-ms.pot',
+			'extract_not_gettexted' => true, 'not_gettexted_files_filter' => array( &$this, 'is_ms_file' ),
+		) );
+		if ( !$ms_result ) {
+			return false;
+		}
+		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
+		if ( !$common_pot ) {
+			unlink( $core_pot );
+			return false;
+		}
+		$ms_pot = realpath( is_null( $output )? 'wordpress-ms.pot' : $output );
+		system( "msgcat --more-than=1 --use-first $core_pot $ms_pot > $common_pot" );
+		system( "msgcat -u --use-first $ms_pot $common_pot -o $ms_pot" );
+		return true;
+	}
+	
+	function wp_tz($dir, $output) {
+		$continents_path = 'wp-admin/includes/continents-cities.php';
+		if ( !file_exists( "$dir/$continents_path" ) ) return false;
+		return $this->wp_generic( $dir, array(
+			'project' => 'wp-tz', 'output' => $output,
+			'includes' => array($continents_path), 'excludes' => array(),
+			'default_output' => 'wordpress-continents-cities.pot',
+			'extract_not_gettexted' => false,
+		) );
+	}
+	
+	function wp_version($dir) {
+		$version_php = $dir.'/wp-includes/version.php';
+		if ( !is_readable( $version_php ) ) return false;		
+		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
 	}
 	
 
@@ -291,6 +359,20 @@ class MakePOT {
 		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/*'));
 	}
 
+	function is_ms_file( $file_name ) {
+		$is_ms_file = false;
+		$prefix = substr( $file_name, 0, 2 ) === './'? './' : '';
+		foreach( $this->ms_files as $ms_file )
+			if ( fnmatch( $prefix.$ms_file, $file_name ) ) {
+				$is_ms_file = true;
+				break;
+			}
+		return $is_ms_file;
+	}
+	
+	function is_not_ms_file( $file_name ) {
+		return !$this->is_ms_file( $file_name );
+	}
 }
 
 // run the CLI only if the file

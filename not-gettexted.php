@@ -175,6 +175,7 @@ class NotGettexted {
 			fwrite($potf, "\n".PO::export_entry($entry)."\n");
 		}
 		if ('-' != $pot_filename) fclose($potf);
+		return true;
 	}
 
 	function command_replace() {
