@@ -175,7 +175,10 @@ class MakePOT {
 		$args = array_merge( $defaults, $args );
 		extract( $args );
 		$placeholders = array();
-		if ( $wp_version = $this->wp_version( $dir ) ) $placeholders['version'] = $wp_version;
+		if ( $wp_version = $this->wp_version( $dir ) )
+			$placeholders['version'] = $wp_version;
+		else
+			return false;
 		$output = is_null( $output )? $default_output : $output;		
 		$res = $this->xgettext( $project, $dir, $output, $placeholders, $excludes, $includes );
 		if ( !$res ) return false;
@@ -203,6 +206,7 @@ class MakePOT {
 	}
 	
 	function wp_ms($dir, $output) {
+		if ( !is_file("$dir/wp-admin/ms-users.php") ) return false;
 		$core_pot = tempnam( sys_get_temp_dir(), 'wordpress.pot');
 		if ( false === $core_pot ) return false;
 		$core_result = $this->wp_core( $dir, $core_pot );
@@ -356,7 +360,7 @@ class MakePOT {
 	
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
-		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/*'));
+		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/*'));
 	}
 
 	function is_ms_file( $file_name ) {
