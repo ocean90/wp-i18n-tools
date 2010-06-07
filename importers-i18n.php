@@ -144,6 +144,47 @@ add_action( 'init', '{$importer_underscore}_init' );
 		}
 	}
 	
+	function create_glotpress_projects( $parent_project_path ) {
+		require_once $this->glotpress_source_dir . '/gp-load.php';
+		require_once dirname(__FILE__) . '/makepot.php';
+		$makepot = new MakePOT;
+		$parent_project = GP::$project->by_path( $parent_project_path );
+		if ( !$parent_project ) {
+			echo "Couldn't find project with path $parent_project_path.\n";
+			return;
+		}
+		foreach( $this->importers as $importer ) {
+			$source = $makepot->get_first_lines( $this->s( $importer, '%trunk%/%importer%.php' ), $makepot->max_header_lines);
+			if ( !GP::$project->by_path( "$parent_project_path/$importer") ) {
+				$importer_project = GP::$project->create_and_select(array(
+					'name' => $makepot->get_addon_header('Plugin Name', $source),
+					'slug' => $importer,
+					'description' => $makepot->get_addon_header('Description', $source),
+					'parent_project_id' => $parent_project->id,
+				));				
+			} else {
+				echo "Project $parent_project_path/$importer already exists.\n";
+			}
+			if ( !GP::$project->by_path( "$parent_project_path/$importer/dev") ) {
+				$trunk_project = GP::$project->create_and_select(array(
+					'name' => 'Development (trunk)',
+					'slug' => 'dev',
+					'description' => 'Development version of ' . $makepot->get_addon_header('Plugin Name', $source),
+					'parent_project_id' => $importer_project->id,
+					'source_url_template' => $this->s($importer, "http://plugins.trac.wordpress.org/browser/%importer%/trunk/%file%#L%line%"),
+				));
+			} else {
+				echo "Project $parent_project_path/$importer/dev already exists.\n";
+			}			
+		}
+	}
+	
+	function import_glotpress_originals( $parent_project_path ) {
+		foreach( $this->importers as $importer ) {
+			system( $this->s( $importer, "php $this->glotpress_source_dir/scripts/import-originals.php -p $parent_project_path/%importer%/dev -f %trunk%/languages/%importer%.pot" ) );
+		}
+	}
+	
 	function line_of_text( $line ) {
 		foreach( $this->importers as $importer ) {
 			echo $this->s( $importer, $line ) . "\n";
