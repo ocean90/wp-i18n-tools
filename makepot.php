@@ -30,7 +30,7 @@ class MakePOT {
 		'esc_html__', 'esc_html_e', 'esc_html_x:1,2c',
 	);
 	
-	var $ms_files = array('ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php');
+	var $ms_files = array('ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php', 'wp-admin/includes/ms.php');
 
 	var $xgettext_options = array(
 		'default' => array(
