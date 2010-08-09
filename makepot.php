@@ -94,7 +94,7 @@ class MakePOT {
 	);
 
 	function MakePOT($deprecated = true) {
-		$this->xgettext_options['default']['year'] = date('Y');
+		$this->xgettext_options['default']['year'] = gmdate('Y');
 	}
 
 	function realpath_missing($path) {
@@ -189,7 +189,7 @@ class MakePOT {
 			chdir( $dir );
 			$php_files = NotGettexted::list_php_files('.');
 			$php_files = array_filter( $php_files, $not_gettexted_files_filter );
-			$not_gettexted = & new NotGettexted;
+			$not_gettexted = new NotGettexted;
 			$res = $not_gettexted->command_extract( $output, $php_files );
 			chdir( $old_dir );
 			/* Adding non-gettexted strings can repeat some phrases */

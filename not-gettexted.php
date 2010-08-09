@@ -227,7 +227,7 @@ class NotGettexted {
 $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
 	error_reporting(E_ALL);
-	$not_gettexted = & new NotGettexted;
+	$not_gettexted = new NotGettexted;
 	$not_gettexted->cli();
 }
 
