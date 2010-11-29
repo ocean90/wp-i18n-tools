@@ -29,8 +29,8 @@ class MakePOT {
 		'esc_attr__', 'esc_attr_e', 'esc_attr_x:1,2c',
 		'esc_html__', 'esc_html_e', 'esc_html_x:1,2c',
 	);
-	
-	var $ms_files = array('ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php', 'wp-admin/includes/ms.php', 'wp-admin/network/*.php');
+
+	var $ms_files = array( 'ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php', 'wp-admin/includes/ms.php', 'wp-admin/network/*.php', 'wp-admin/includes/class-wp-ms*' );
 
 	var $xgettext_options = array(
 		'default' => array(
