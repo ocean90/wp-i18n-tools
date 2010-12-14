@@ -33,16 +33,23 @@ class StringExtractor {
 				$args = array();
 				$func_name = $text;
 				$func_line = $line;
+				$just_got_into_func = true;
 				continue;
 			}
 			if ( !$in_func ) continue;
 			if ( '(' == $token ) {
 				$paren_level++;
 				if ( 0 == $paren_level ) { // start of first argument
+					$just_got_into_func = false;
 					$current_argument = null;
 					$current_argument_is_just_literal = true;
 				}
 				continue;
+			}
+			if ( $just_got_into_func ) {
+				// there wasn't a opening paren just after the function name -- this means it is not a function
+				$in_func = false;
+				$just_got_into_func = false;
 			}
 			if ( ')' == $token ) {
 				if ( 0 == $paren_level ) {
@@ -89,6 +96,10 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	
 	function test_find_functions_one_arg_non_literal() {
 		$this->assertEquals( array( array( 'name' => '__', 'args' => array( null ), 'line' => 1 ) ), $this->extractor->find_functions( array('__'), '<?php __("baba" . "dudu"); ?>' ) );
+	}
+	
+	function test_find_functions_shouldnt_be_mistaken_by_a_class() {
+		$this->assertEquals( array(), $this->extractor->find_functions( array('__'), '<?php class __ { }; ("dyado");' ) );
 	}
 	
 }
