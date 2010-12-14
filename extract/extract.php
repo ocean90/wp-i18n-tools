@@ -107,4 +107,25 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	function test_find_functions_2_args_bad_literal() {
 		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f(5, "baba" ); ' ) );
 	}
+	
+	function test_find_functions_2_args_bad_literal_bad() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba", null ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f(5, "baba", 5 ); ' ) );
+	}
+	
+	function test_find_functions_1_arg_bad_concat() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f( "baba" . "baba" ); ' ) );
+	}
+	
+	function test_find_functions_1_arg_bad_function_call() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f( g( "baba" ) ); ' ) );
+	}
+	
+	function test_find_functions_2_arg_literal_bad() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( "baba", null ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f( "baba", null ); ' ) );
+	}
+	
+	function test_find_functions_2_arg_bad_with_parens_literal() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f( g( "dyado", "chicho", "lelya "), "baba" ); ' ) );
+	}
+
 }
