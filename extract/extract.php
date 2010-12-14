@@ -71,8 +71,10 @@ class StringExtractor {
 				eval('$current_argument = '.$text.';' );
 				continue;
 			}
-			$current_argument_is_just_literal = false;
-			$current_argument = null;
+			if ( T_WHITESPACE != $id ) { 
+				$current_argument_is_just_literal = false;
+				$current_argument = null;
+			}
 		}
 		return $functions;
 	}
@@ -102,4 +104,7 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals( array(), $this->extractor->find_functions( array('__'), '<?php class __ { }; ("dyado");' ) );
 	}
 	
+	function test_find_functions_2_args_bad_literal() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_functions( array('f'), '<?php f(5, "baba" ); ' ) );
+	}
 }
