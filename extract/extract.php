@@ -60,7 +60,7 @@ class StringExtractor {
 				continue;
 			}
 			if ( T_CONSTANT_ENCAPSED_STRING == $id && $current_argument_is_just_literal ) {
-				// TODO: get the value out of the enclosing quotes
+				// we can use eval safely, because we are sure $text is just a string literal
 				eval('$current_argument = '.$text.';' );
 			}
 			$current_argument_is_just_literal = false;
@@ -71,15 +71,17 @@ class StringExtractor {
 
 class ExtractTest extends PHPUnit_Framework_TestCase {
 	
+	function setUp() {
+		$this->extractor = new StringExtractor;
+	}
+	
 	function test_with_just_a_string() {
-		$extractor = new StringExtractor;
 		$expected = new Translation_Entry( array( 'singular' => 'baba' ) );
-		$result = $extractor->extract('<?php __("baba"); ?>');
+		$result = $this->extractor->extract('<?php __("baba"); ?>');
 		$this->assertEquals( $expected, $result->entries['baba'] );
 	}
 	
-	function test_find_functions() {
-		$extractor = new StringExtractor;
-		$this->assertEquals( array( array( 'name' => '__', 'args' => array( 'baba' ), 'line' => 1 ) ), $extractor->find_functions( array('__'), '<?php __("baba"); ?>' ) );
+	function test_find_functions_one_arg_literal() {
+		$this->assertEquals( array( array( 'name' => '__', 'args' => array( 'baba' ), 'line' => 1 ) ), $this->extractor->find_functions( array('__'), '<?php __("baba"); ?>' ) );
 	}
 }
