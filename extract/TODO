@@ -10,3 +10,6 @@
 * php extract.php <dir>
 * php extract.php <dir> <exclude>
 * php extract.php <dir> <only-include>
+
+* extracted comments
+* php-format
