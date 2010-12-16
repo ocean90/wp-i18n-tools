@@ -1,15 +1,5 @@
-* __('baba')
-* t('baba')
-* __('junk', 'baba')
-* _x('baba', 'context')
-* _n('singular', 'plural')
-* _nx('singular', 'plural', 'context')
 * mixed('baba', 'singular', 'plural')
 	- How to deal with context here?
-* php extract.php <file>
-* php extract.php <dir>
-* php extract.php <dir> <exclude>
-* php extract.php <dir> <only-include>
-
 * extracted comments
+* extract from a directory + include/exclude
 * php-format
