@@ -34,7 +34,8 @@ class StringExtractor {
 				break;
 			}
 		}
-		$entry->references = array( $file_name . ':' . $call['line'] );
+		if ( isset( $call['line'] ) ) $entry->references = array( $file_name . ':' . $call['line'] );
+		if ( isset( $call['comment'] ) ) $entry->extracted_comments = $call['comment'];
 		return $entry;
 	}
 	
@@ -43,7 +44,7 @@ class StringExtractor {
 		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
 		foreach( $function_calls as $call ) {
 			$entry = $this->entry_from_call( $call, $file_name );
-			if ( $entry ) $translations->add_entry( array( 'singular' => 'baba' ) );
+			if ( $entry ) $translations->add_entry( $entry );
 		}
 		return $translations;
 	}
@@ -124,56 +125,67 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	}
 	
 	function test_with_just_a_string() {
-		$expected = new Translation_Entry( array( 'singular' => 'baba' ) );
+		$expected = new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:1') ) );
 		$result = $this->extractor->extract_entries('<?php __("baba"); ?>', 'baba.php' );
 		$this->assertEquals( $expected, $result->entries['baba'] );
 	}
 		
 	function test_entry_from_call_simple() {
-		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'line' => 1 ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:1' ) ) ) );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba') ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba' ) ) );
 	}
 	
 	function test_entry_from_call_nonexisting_function() {
-		$entry = $this->extractor->entry_from_call( array( 'name' => 'f', 'args' => array('baba'), 'line' => 1 ), 'baba.php' );
+		$entry = $this->extractor->entry_from_call( array( 'name' => 'f', 'args' => array('baba') ), 'baba.php' );
 		$this->assertEquals( $entry, null );
 	}
 	
 	function test_entry_from_call_too_few_args() {
-		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array(), 'line' => 1 ), 'baba.php' );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array() ), 'baba.php' );
 		$this->assertEquals( $entry, null );
 	}	
 
 	function test_entry_from_call_non_expected_null_arg() {
 		$this->extractor->rules = array( '_nx' => array( 'singular', 'plural', 'context' ) );
-		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', null, 'noun'), 'line' => 1 ), 'baba.php' );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', null, 'noun') ), 'baba.php' );
 		$this->assertEquals( $entry, null );
 	}
 	
 	function test_entry_from_call_more_args_should_be_ok() {
 		$this->extractor->rules = array( '__' => array('string') );
-		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba', 5, 'pijo', null), 'line' => 1 ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:1' ) ) ) );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba', 5, 'pijo', null) ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba' ) ) );
 	}
 	
 
 	function test_entry_from_call_context() {
 		$this->extractor->rules = array( '_x' => array( 'string', 'context' ) );
-		$entry = $this->extractor->entry_from_call( array( 'name' => '_x', 'args' => array('baba', 'noun'), 'line' => 1 ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:1' ), 'context' => 'noun' ) ) );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '_x', 'args' => array('baba', 'noun') ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'context' => 'noun' ) ) );
 	}
 
 	function test_entry_from_call_plural() {
 		$this->extractor->rules = array( '_n' => array( 'singular', 'plural' ) );
-		$entry = $this->extractor->entry_from_call( array( 'name' => '_n', 'args' => array('%s baba', '%s babas'), 'line' => 1 ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas', 'references' => array('baba.php:1' ), ) ) );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '_n', 'args' => array('%s baba', '%s babas') ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas' ) ) );
 	}
 
 	function test_entry_from_call_plural_and_context() {
 		$this->extractor->rules = array( '_nx' => array( 'singular', 'plural', 'context' ) );
-		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', '%s babas', 'noun'), 'line' => 1 ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas', 'references' => array('baba.php:1' ), 'context' => 'noun' ) ) );
+		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', '%s babas', 'noun') ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas', 'context' => 'noun' ) ) );
 	}
+	
+	function test_entry_from_call_extracted_comment() {
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'comment' => 'translators: give me back my pants!' ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'extracted_comments' => 'translators: give me back my pants!' ) ) );
+	}
+
+	function test_entry_from_call_line_number() {
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'line' => 10 ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:10') ) ) );
+	}
+
 	
 	function test_find_function_calls_one_arg_literal() {
 		$this->assertEquals( array( array( 'name' => '__', 'args' => array( 'baba' ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('__'), '<?php __("baba"); ?>' ) );
@@ -210,5 +222,4 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	function test_find_function_calls_2_arg_bad_with_parens_literal() {
 		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('f'), '<?php f( g( "dyado", "chicho", "lelya "), "baba" ); ' ) );
 	}
-
 }
