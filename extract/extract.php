@@ -8,7 +8,50 @@ class StringExtractor {
 	
 	function __construct( $rules = array() ) {
 		$this->rules = $rules;
-		
+	}
+	
+	function extract_from_directory( $dir, $excludes = array(), $includes = array(), $prefix = '' ) {
+		$old_cwd = getcwd();
+		chdir( $dir );
+		$translations = new Translations;
+		$dh = opendir( '.' );
+		while ( ( $file_name = readdir( $dh ) ) !== false) {
+			if ( '.' == $file_name || '..' == $file_name ) continue;
+			if ( preg_match( '/\.php$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
+				$translations->merge_originals_with( $this->extract_from_file( $file_name, $prefix ) );
+			}
+			if ( is_dir( $file_name ) ) {
+				$translations->merge_originals_with( $this->extract_from_directory( $file_name, $excludes, $includes, $prefix . $file_name . '/' ) );
+			}
+		}
+		chdir( $old_cwd );
+		return $translations;
+	}
+	
+	function extract_from_file( $file_name, $prefix ) {
+		$code = file_get_contents( $file_name );
+		return $this->extract_entries( $code, $prefix . $file_name );
+	}
+	
+	function does_file_name_match( $path, $excludes, $includes ) {
+		if ( $includes ) {
+			$matched_any_include = false;
+			foreach( $includes as $include ) {
+				if ( preg_match( '|^'.$include.'$|', $path ) ) {
+					$matched_any_include = true;
+					break;
+				}
+			}
+			if ( !$matched_any ) return false;
+		}
+		if ( $excludes ) {
+			foreach( $excludes as $exclude ) {
+				if ( preg_match( '|^'.$exclude.'$|', $path ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	function entry_from_call( $call, $file_name ) {
@@ -72,6 +115,7 @@ class StringExtractor {
 				$func_line = $line;
 				$func_comment = $previous_is_comment? trim( $previous_is_comment ) : '';
 				$func_comment = trim( preg_replace( '/^\/\*|\/\//', '', preg_replace( '|\*/$|', '', $func_comment ) ) );
+				if ( $func_comment ) $func_comment .= "\n";
 				$just_got_into_func = true;
 				continue;
 			}
