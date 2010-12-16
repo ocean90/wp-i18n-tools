@@ -1,5 +1,4 @@
 * mixed('baba', 'singular', 'plural')
 	- How to deal with context here?
-* extracted comments
 * extract from a directory + include/exclude
 * php-format

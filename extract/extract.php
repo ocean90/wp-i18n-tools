@@ -34,8 +34,8 @@ class StringExtractor {
 				break;
 			}
 		}
-		if ( isset( $call['line'] ) ) $entry->references = array( $file_name . ':' . $call['line'] );
-		if ( isset( $call['comment'] ) ) $entry->extracted_comments = $call['comment'];
+		if ( isset( $call['line'] ) && $call['line'] ) $entry->references = array( $file_name . ':' . $call['line'] );
+		if ( isset( $call['comment'] ) && $call['comment'] ) $entry->extracted_comments = $call['comment'];
 		return $entry;
 	}
 	
@@ -58,6 +58,7 @@ class StringExtractor {
 	function find_function_calls( $function_names, $code ) {
 		$tokens = token_get_all( $code );
 		$function_calls = array();
+		$previous_is_comment = false;
 		$in_func = false;
 		foreach( $tokens as $token ) {
 			$id = $text = null;
@@ -69,9 +70,12 @@ class StringExtractor {
 				$args = array();
 				$func_name = $text;
 				$func_line = $line;
+				$func_comment = $previous_is_comment? trim( $previous_is_comment ) : '';
+				$func_comment = trim( preg_replace( '/^\/\*|\/\//', '', preg_replace( '|\*/$|', '', $func_comment ) ) );
 				$just_got_into_func = true;
 				continue;
 			}
+			$previous_is_comment = ( T_COMMENT == $id )? $text : false;
 			if ( !$in_func ) continue;
 			if ( '(' == $token ) {
 				$paren_level++;
@@ -91,7 +95,9 @@ class StringExtractor {
 				if ( 0 == $paren_level ) {
 					$in_func = false;
 					$args[] = $current_argument;
-					$function_calls[] = array( 'name' => $func_name, 'args' => $args, 'line' => $func_line );
+					$call = array( 'name' => $func_name, 'args' => $args, 'line' => $func_line );
+					if ( $func_comment ) $call['comment'] = $func_comment;
+					$function_calls[] = $call;
 				}
 				$paren_level--;
 				continue;
@@ -107,7 +113,6 @@ class StringExtractor {
 				eval('$current_argument = '.$text.';' );
 				continue;
 			}
-			
 			$current_argument_is_just_literal = false;
 			$current_argument = null;
 		}
@@ -221,5 +226,9 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	
 	function test_find_function_calls_2_arg_bad_with_parens_literal() {
 		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( null, "baba" ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('f'), '<?php f( g( "dyado", "chicho", "lelya "), "baba" ); ' ) );
+	}
+	
+	function test_find_function_calls_with_comment() {
+		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ), $this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ f( "baba" ); ' ) );
 	}
 }
