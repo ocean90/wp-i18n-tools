@@ -56,6 +56,7 @@ class MakePOT {
 			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com',
 			'language' => 'php',
 			'add-comments' => 'translators',
+			'comments' => "Copyright (C) 2010 {package-name}\nThis file is distributed under the same license as the {package-name} package.",
 		),
 		'generic' => array(),
 		'wp-core' => array(
@@ -112,6 +113,7 @@ class MakePOT {
 
 	function xgettext($project, $dir, $output_file, $placeholders = array(), $excludes = array(), $includes = array()) {
 		$meta = array_merge( $this->meta['default'], $this->meta[$project] );
+		$placeholders = array_merge( $meta, $placeholders );
 		$meta['output'] = $this->realpath_missing( $output_file );
 		$placeholder_keys = array_map( create_function( '$x', 'return "{".$x."}";' ), array_keys( $placeholders ) );
 		$placeholder_values = array_values( $placeholders );
@@ -132,6 +134,7 @@ class MakePOT {
 		$pot->set_header( 'PO-Revision-Date', '2010-MO-DA HO:MI+ZONE' );
 		$pot->set_header( 'Last-Translator', 'FULL NAME <EMAIL@ADDRESS>' );
 		$pot->set_header( 'Language-Team', 'LANGUAGE <LL@li.org>' );
+		$pot->set_comment_before_headers( $meta['comments'] );
 		$pot->export_to_file( $output_file );
 		return true;
 	}
