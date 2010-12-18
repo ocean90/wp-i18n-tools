@@ -65,19 +65,28 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	
 	function test_entry_from_call_extracted_comment() {
 		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'comment' => 'translators: give me back my pants!' ), 'baba.php' );
-		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'extracted_comments' => 'translators: give me back my pants!' ) ) );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'extracted_comments' => "translators: give me back my pants!\n" ) ) );
 	}
 
 	function test_entry_from_call_line_number() {
 		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'line' => 10 ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:10') ) ) );
 	}
+	
+	function test_entry_from_call_zero() {
+		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('0') ), 'baba.php' );
+		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '0' ) ) );
+	}
 
 	
 	function test_find_function_calls_one_arg_literal() {
 		$this->assertEquals( array( array( 'name' => '__', 'args' => array( 'baba' ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('__'), '<?php __("baba"); ?>' ) );
 	}
-	
+
+	function test_find_function_calls_one_arg_zero() {
+		$this->assertEquals( array( array( 'name' => '__', 'args' => array( '0' ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('__'), '<?php __("0"); ?>' ) );
+	}
+
 	function test_find_function_calls_one_arg_non_literal() {
 		$this->assertEquals( array( array( 'name' => '__', 'args' => array( null ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('__'), '<?php __("baba" . "dudu"); ?>' ) );
 	}

@@ -59,7 +59,7 @@ class StringExtractor {
 		if ( !$rule ) return null;
 		$entry = new Translation_Entry;
 		for( $i = 0; $i < count( $rule ); ++$i ) {
-			if ( $rule[$i] && ( !isset( $call['args'][$i] ) || !$call['args'][$i] ) ) return false;
+			if ( $rule[$i] && ( !isset( $call['args'][$i] ) || !is_string( $call['args'][$i] ) || '' == $call['args'][$i] ) ) return false;
 			switch( $rule[$i] ) {
 			case 'string':
 				$entry->singular = $call['args'][$i];
@@ -78,7 +78,7 @@ class StringExtractor {
 			}
 		}
 		if ( isset( $call['line'] ) && $call['line'] ) $entry->references = array( $file_name . ':' . $call['line'] );
-		if ( isset( $call['comment'] ) && $call['comment'] ) $entry->extracted_comments = $call['comment'];
+		if ( isset( $call['comment'] ) && $call['comment'] ) $entry->extracted_comments = rtrim( $call['comment'] ) . "\n";
 		return $entry;
 	}
 	
@@ -115,7 +115,6 @@ class StringExtractor {
 				$func_line = $line;
 				$func_comment = $previous_is_comment? trim( $previous_is_comment ) : '';
 				$func_comment = trim( preg_replace( '/^\/\*|\/\//', '', preg_replace( '|\*/$|', '', $func_comment ) ) );
-				if ( $func_comment ) $func_comment .= "\n";
 				$just_got_into_func = true;
 				continue;
 			}
