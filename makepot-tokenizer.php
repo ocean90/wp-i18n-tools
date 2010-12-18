@@ -23,6 +23,7 @@ class MakePOT {
 	);
 
 	var $rules = array(
+		'_' => array('string'),
 		'__' => array('string'),
 		'_e' => array('string'),
 		'_c' => array('string'),
@@ -341,9 +342,9 @@ class MakePOT {
 
 	function is_ms_file( $file_name ) {
 		$is_ms_file = false;
-		$prefix = substr( $file_name, 0, 2 ) === './'? './' : '';
+		$prefix = substr( $file_name, 0, 2 ) === './'? '\./' : '';
 		foreach( $this->ms_files as $ms_file )
-			if ( fnmatch( $prefix.$ms_file, $file_name ) ) {
+			if ( preg_match( '|^'.$prefix.$ms_file.'$|', $file_name ) ) {
 				$is_ms_file = true;
 				break;
 			}
