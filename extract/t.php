@@ -72,13 +72,28 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba'), 'line' => 10 ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.php:10') ) ) );
 	}
-	
+
 	function test_entry_from_call_zero() {
 		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('0') ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '0' ) ) );
 	}
 
-	
+	function test_entry_from_call_multiple() {
+		$this->extractor->rules = array( 'c' => array( 'string', 'singular', 'plural' ) );
+		$entries = $this->extractor->entry_from_call( array( 'name' => 'c', 'args' => array('baba', 'dyado', 'dyados') ), 'baba.php' );
+		$this->assertEquals( array(
+				new Translation_Entry( array( 'singular' => 'baba' ) ), new Translation_Entry( array( 'singular' => 'dyado', 'plural' => 'dyados' ) ) ), $entries );
+	}
+
+	function test_entry_from_call_multiple_first_plural_then_two_strings() {
+		$this->extractor->rules = array( 'c' => array( 'singular', 'plural', null, 'string', 'string' ) );
+		$entries = $this->extractor->entry_from_call( array( 'name' => 'c', 'args' => array('dyado', 'dyados', 'baba', 'foo', 'bar') ), 'baba.php' );
+		$this->assertEquals( array(
+				new Translation_Entry( array( 'singular' => 'dyado', 'plural' => 'dyados' ) ),
+				new Translation_Entry( array( 'singular' => 'foo' ) ),
+				new Translation_Entry( array( 'singular' => 'bar' ) ) ), $entries );
+	}
+
 	function test_find_function_calls_one_arg_literal() {
 		$this->assertEquals( array( array( 'name' => '__', 'args' => array( 'baba' ), 'line' => 1 ) ), $this->extractor->find_function_calls( array('__'), '<?php __("baba"); ?>' ) );
 	}

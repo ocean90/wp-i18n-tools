@@ -58,27 +58,61 @@ class StringExtractor {
 		$rule = isset( $this->rules[$call['name']] )? $this->rules[$call['name']] : null;
 		if ( !$rule ) return null;
 		$entry = new Translation_Entry;
+		$multiple = array();
+		$complete = false;
 		for( $i = 0; $i < count( $rule ); ++$i ) {
 			if ( $rule[$i] && ( !isset( $call['args'][$i] ) || !is_string( $call['args'][$i] ) || '' == $call['args'][$i] ) ) return false;
 			switch( $rule[$i] ) {
 			case 'string':
+				if ( $complete ) {
+					$multiple[] = $entry;
+					$entry = new Translation_Entry;
+					$complete = false;
+				}
 				$entry->singular = $call['args'][$i];
+				$complete = true;
 				break;
 			case 'singular':
+				if ( $complete ) {
+					$multiple[] = $entry;
+					$entry = new Translation_Entry;
+					$complete = false;
+				}
 				$entry->singular = $call['args'][$i];
 				$entry->is_plural = true;
 				break;
 			case 'plural':
 				$entry->plural = $call['args'][$i];
 				$entry->is_plural = true;
+				$complete = true;
 				break;
 			case 'context':
 				$entry->context = $call['args'][$i];
+				foreach( $multiple as &$single_entry ) {
+					$single_entry->context = $entry->context;
+				}
 				break;
 			}
 		}
-		if ( isset( $call['line'] ) && $call['line'] ) $entry->references = array( $file_name . ':' . $call['line'] );
-		if ( isset( $call['comment'] ) && $call['comment'] ) $entry->extracted_comments = rtrim( $call['comment'] ) . "\n";
+		if ( isset( $call['line'] ) && $call['line'] ) {
+			$references = array( $file_name . ':' . $call['line'] );
+			$entry->references = $references;
+			foreach( $multiple as &$single_entry ) {
+				$single_entry->references = $references;
+			}
+		}
+		if ( isset( $call['comment'] ) && $call['comment'] ) {
+			$comments = rtrim( $call['comment'] ) . "\n";
+			$entry->extracted_comments = $comments;
+			foreach( $multiple as &$single_entry ) {
+				$single_entry->extracted_comments = $comments;
+			}
+		}
+		if ( $multiple && $entry ) {
+			$multiple[] = $entry;
+			return $multiple;
+		}
+		
 		return $entry;
 	}
 	
@@ -87,7 +121,11 @@ class StringExtractor {
 		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
 		foreach( $function_calls as $call ) {
 			$entry = $this->entry_from_call( $call, $file_name );
-			if ( $entry ) $translations->add_entry( $entry );
+			if ( is_array( $entry ) )
+				foreach( $entry as $single_entry )
+					$translations->add_entry_or_merge( $single_entry );
+			elseif ( $entry)
+				$translations->add_entry_or_merge( $entry );
 		}
 		return $translations;
 	}

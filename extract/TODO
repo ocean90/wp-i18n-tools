@@ -1,4 +1,1 @@
-* mixed('baba', 'singular', 'plural')
-	- How to deal with context here?
-* extract from a directory + include/exclude
 * php-format
