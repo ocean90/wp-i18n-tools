@@ -1,6 +1,7 @@
 <?php
 require_once 'not-gettexted.php';
 require_once 'pot-ext-meta.php';
+require_once 'extract/extract.php';
 
 if ( !defined( 'STDERR' ) ) {
 	define( 'STDERR', fopen( 'php://stderr', 'w' ) );
@@ -21,24 +22,38 @@ class MakePOT {
 		'bp',
 	);
 
-	var $keywords = array(
-		'__', '_e', '_c',
-		'__ngettext:1,2', '_n:1,2', '_nc:1,2',
-		'__ngettext_noop:1,2', '_n_noop:1,2',
-		'_x:1,2c', '_nx:1,2,4c', '_nx_noop:1,2,3c', '_ex:1,2c',
-		'esc_attr__', 'esc_attr_e', 'esc_attr_x:1,2c',
-		'esc_html__', 'esc_html_e', 'esc_html_x:1,2c',
+	var $rules = array(
+		'_' => array('string'),
+		'__' => array('string'),
+		'_e' => array('string'),
+		'_c' => array('string'),
+		'_n' => array('singular', 'plural'),
+		'_n_noop' => array('singular', 'plural'),
+		'_nc' => array('singular', 'plural'),
+		'__ngettext' => array('singular', 'plural'),
+		'__ngettext_noop' => array('singular', 'plural'),
+		'_x' => array('string', 'context'),
+		'_ex' => array('string', 'context'),
+		'_nx' => array('singular', 'plural', null, 'context'),
+		'_nx_noop' => array('singular', 'plural', 'context'),
+		'esc_attr__' => array('string'),
+		'esc_html__' => array('string'),
+		'esc_attr_e' => array('string'),
+		'esc_html_e' => array('string'),
+		'esc_attr_x' => array('string', 'context'),
+		'esc_html_x' => array('string', 'context'),
+		'comments_number_link' => array('string', 'singular', 'plural'),
 	);
 
-	var $ms_files = array( 'ms-*', '*/ms-*', '*/my-*', 'wp-activate.php', 'wp-signup.php', 'wp-admin/network.php', 'wp-admin/includes/ms.php', 'wp-admin/network/*.php', 'wp-admin/includes/class-wp-ms*' );
+	var $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
 
-	var $xgettext_options = array(
+	var $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
 			'msgid-bugs-address' => 'wp-polyglots@lists.automattic.com',
 			'language' => 'php',
 			'add-comments' => 'translators',
-			'year' => '', // to be set in constructor
+			'comments' => "Copyright (C) 2010 {package-name}\nThis file is distributed under the same license as the {package-name} package.",
 		),
 		'generic' => array(),
 		'wp-core' => array(
@@ -85,16 +100,8 @@ class MakePOT {
 		),
 	);
 	
-	var $manual_options = array(
-		'copyright-holder' => "THE PACKAGE'S COPYRIGHT HOLDER",
-		'package-name' => 'PACKAGE',
-		'package-version' => 'VERSION',
-		'year' => 'YEAR',
-		'description' => 'SOME DESCRIPTIVE TITLE',
-	);
-
-	function MakePOT($deprecated = true) {
-		$this->xgettext_options['default']['year'] = gmdate('Y');
+	function __construct($deprecated = true) {
+		$this->extractor = new StringExtractor( $this->rules );
 	}
 
 	function realpath_missing($path) {
@@ -102,60 +109,30 @@ class MakePOT {
 	}
 
 	function xgettext($project, $dir, $output_file, $placeholders = array(), $excludes = array(), $includes = array()) {
-
-		$options = array_merge($this->xgettext_options['default'], $this->xgettext_options[$project]);
-		$options['output'] = $this->realpath_missing($output_file);
-
-		$placeholder_keys = array_map(create_function('$x', 'return "{".$x."}";'), array_keys($placeholders));
-		$placeholder_values = array_values($placeholders);
-		foreach($options as $key => $value) {
-			$options[$key] = str_replace($placeholder_keys, $placeholder_values, $value);
-		}
-		$manual_options = array();
-		foreach(array_keys($this->manual_options) as $key) {
-			$manual_options[$key] = $options[$key];
-			unset($options[$key]);
+		$meta = array_merge( $this->meta['default'], $this->meta[$project] );
+		$placeholders = array_merge( $meta, $placeholders );
+		$meta['output'] = $this->realpath_missing( $output_file );
+		$placeholder_keys = array_map( create_function( '$x', 'return "{".$x."}";' ), array_keys( $placeholders ) );
+		$placeholder_values = array_values( $placeholders );
+		foreach($meta as $key => $value) {
+			$meta[$key] = str_replace($placeholder_keys, $placeholder_values, $value);
 		}
 
-		$long_options = array();
-		foreach($this->keywords as $keyword)
-			$long_options[] = "--keyword=$keyword";
-		foreach($options as $key => $value)
-			$long_options[] = is_string($value)? "--$key=$value" : "--$key";
-		$long_options = array_map('escapeshellarg', $long_options);
-		$xgettext_options_str = implode(" \\\n", $long_options);
-		// change dirs, so that we have nice relative references 
-		$old_dir = getcwd();
-		chdir($dir);
-		
-		$excludes_str = implode("\n-and ", array_map(create_function('$x', 'return "! -path ".escapeshellarg("./".$x)." \\\\";'), $excludes));
-		$includes_str = implode("\n-or ", array_map(create_function('$x', 'return "-path ".escapeshellarg("./".$x)." \\\\";'), $includes));
-		if ($excludes_str) $excludes_str = "\n\t\t -and \\( " . $excludes_str . "\n\\) \\";
-		if ($includes_str) $includes_str = "\n\t\t -and \\( " . $includes_str . "\n\\) \\";
-		$cmd = "
-	find . -name '*.php' \\$excludes_str$includes_str
-	-print \\
-	| sed -e 's,^\./,,' \\
-	| sort \\
-	| xargs xgettext \\
-	$xgettext_options_str";
-		system($cmd, $exit_code);
-		chdir($old_dir);
-		if (0 !== $exit_code) {
-			error_log("xgettext exited with exit code $exit_code.");
-			return false;
-		}
+		$originals = $this->extractor->extract_from_directory( $dir, $excludes, $includes );
+		$pot = new PO;
+		$pot->entries = $originals->entries;
 
-		$old_first_lines = $first_lines = $this->get_first_lines( $options['output'], 30 );
-		$first_lines = str_replace('CHARSET', 'utf-8', $first_lines);
-		foreach($this->manual_options as $key => $pot_placeholder) {
-			$first_lines = str_replace($pot_placeholder, $manual_options[$key], $first_lines);
-		}
-		$pot = file_get_contents( $options['output'] );
-		$pot = str_replace($old_first_lines, $first_lines, $pot);
-		if (!file_put_contents($options['output'], $pot)) {
-			return false;
-		}
+		$pot->set_header( 'Project-Id-Version', $meta['package-name'].' '.$meta['package-version'] );
+		$pot->set_header( 'Report-Msgid-Bugs-To', $meta['msgid-bugs-address'] );
+		$pot->set_header( 'POT-Creation-Date', gmdate( 'Y-m-d H:i:s+00:00' ) );
+		$pot->set_header( 'MIME-Version', '1.0' );
+		$pot->set_header( 'Content-Type', 'text/plain; charset=UTF-8' );
+		$pot->set_header( 'Content-Transfer-Encoding', '8bit' );
+		$pot->set_header( 'PO-Revision-Date', '2010-MO-DA HO:MI+ZONE' );
+		$pot->set_header( 'Last-Translator', 'FULL NAME <EMAIL@ADDRESS>' );
+		$pot->set_header( 'Language-Team', 'LANGUAGE <LL@li.org>' );
+		$pot->set_comment_before_headers( $meta['comments'] );
+		$pot->export_to_file( $output_file );
 		return true;
 	}
 
@@ -166,7 +143,7 @@ class MakePOT {
 			'default_output' => 'wordpress.pot',
 			'includes' => array(),
 			'excludes' => array_merge(
-				array('wp-admin/includes/continents-cities.php', 'wp-content/themes/twentyten/*'),
+				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/twentyten/.*'),
 				$this->ms_files
 			),
 			'extract_not_gettexted' => true,
@@ -360,14 +337,14 @@ class MakePOT {
 	
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
-		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/*'));
+		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
 	}
 
 	function is_ms_file( $file_name ) {
 		$is_ms_file = false;
-		$prefix = substr( $file_name, 0, 2 ) === './'? './' : '';
+		$prefix = substr( $file_name, 0, 2 ) === './'? '\./' : '';
 		foreach( $this->ms_files as $ms_file )
-			if ( fnmatch( $prefix.$ms_file, $file_name ) ) {
+			if ( preg_match( '|^'.$prefix.$ms_file.'$|', $file_name ) ) {
 				$is_ms_file = true;
 				break;
 			}
