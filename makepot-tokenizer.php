@@ -43,9 +43,7 @@ class MakePOT {
 		'esc_html_e' => array('string'),
 		'esc_attr_x' => array('string', 'context'),
 		'esc_html_x' => array('string', 'context'),
-		//'get_comments_number_text:1', 'comments_number_text:1',		
-		//'get_comments_number_text:2,3', 'comments_number_text:2,3',
-		//'get_comments_number_text_x:2,3,4c', 'comments_number_text_x:2,3,4c',
+		'comments_number_link' => array('string', 'singular', 'plural'),
 	);
 
 	var $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
