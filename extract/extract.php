@@ -42,7 +42,7 @@ class StringExtractor {
 					break;
 				}
 			}
-			if ( !$matched_any ) return false;
+			if ( !$matched_any_include ) return false;
 		}
 		if ( $excludes ) {
 			foreach( $excludes as $exclude ) {
