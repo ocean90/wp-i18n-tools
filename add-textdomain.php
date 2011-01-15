@@ -18,7 +18,7 @@ class AddTextdomain {
 
 	function AddTextdomain() {
 		$makepot = new MakePOT;
-		$this->funcs = array_map( create_function( '$x', '$parts = explode(":", $x); return $parts[0];' ), $makepot->keywords );
+		$this->funcs = array_keys( $makepot->rules );
 	}
 
 	function usage() {
