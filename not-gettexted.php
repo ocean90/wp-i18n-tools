@@ -195,7 +195,9 @@ class NotGettexted {
 			$this->cli_die("Couldn't read MO file '$mo_filename'!");
 		}
 		foreach($filenames as $filename) {
-			$tokens = token_get_all(file_get_contents($filename));
+			$source = file_get_contents($filename);
+			if ( strlen($source) > 50000 ) continue;
+			$tokens = token_get_all($source);
 			$new_file = $this->walk_tokens($tokens, $replacer, array(&$this, 'unchanged_token'));
 			$f = fopen($filename, 'w');
 			fwrite($f, $new_file);
