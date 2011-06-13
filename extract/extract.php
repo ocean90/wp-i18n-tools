@@ -5,6 +5,7 @@ require_once dirname( __FILE__ ) . '/../pomo/translations.php';
 class StringExtractor {
 	
 	var $rules = array();
+	var $comment_prefix = 'translators:';
 	
 	function __construct( $rules = array() ) {
 		$this->rules = $rules;
@@ -139,7 +140,7 @@ class StringExtractor {
 	function find_function_calls( $function_names, $code ) {
 		$tokens = token_get_all( $code );
 		$function_calls = array();
-		$previous_is_comment = false;
+		$latest_comment = false;
 		$in_func = false;
 		foreach( $tokens as $token ) {
 			$id = $text = null;
@@ -151,12 +152,18 @@ class StringExtractor {
 				$args = array();
 				$func_name = $text;
 				$func_line = $line;
-				$func_comment = $previous_is_comment? trim( $previous_is_comment ) : '';
-				$func_comment = trim( preg_replace( '/^\/\*|\/\//', '', preg_replace( '|\*/$|', '', $func_comment ) ) );
+				$func_comment = $latest_comment? $latest_comment : '';
+				
 				$just_got_into_func = true;
+				$latest_comment = false;
 				continue;
 			}
-			$previous_is_comment = ( T_COMMENT == $id )? $text : false;
+			if ( T_COMMENT == $id ) {
+				$text = trim( preg_replace( '%^/\*|//%', '', preg_replace( '%\*/$%', '', $text ) ) );
+				if ( 0 === strpos( $text, $this->comment_prefix ) ) {
+					$latest_comment = $text;
+				}
+			}
 			if ( !$in_func ) continue;
 			if ( '(' == $token ) {
 				$paren_level++;

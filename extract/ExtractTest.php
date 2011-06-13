@@ -135,6 +135,20 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	}
 	
 	function test_find_function_calls_with_comment() {
-		$this->assertEquals( array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ), $this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ f( "baba" ); ' ) );
+		$this->assertEquals(
+			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ f( "baba" ); ' ) );
+	}
+	
+	function test_find_function_calls_with_not_immediate_comment() {
+		$this->assertEquals(
+			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: let your ears fly! */ $foo = g ( f( "baba" ) ); ' ) );
+	}
+	
+	function test_find_function_calls_with_not_immediate_comment_include_only_latest() {
+		$this->assertEquals(
+			array( array( 'name' => 'f', 'args' => array( 'baba' ), 'line' => 1, 'comment' => 'translators: let your ears fly!' ) ),
+			$this->extractor->find_function_calls( array('f'), '<?php /* translators: boo */ /* translators: let your ears fly! */ /* baba */ $foo = g ( f( "baba" ) ); ' ) );
 	}
 }
