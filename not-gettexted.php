@@ -196,7 +196,7 @@ class NotGettexted {
 		}
 		foreach($filenames as $filename) {
 			$source = file_get_contents($filename);
-			if ( strlen($source) > 50000 ) continue;
+			if ( strlen($source) > 150000 ) continue;
 			$tokens = token_get_all($source);
 			$new_file = $this->walk_tokens($tokens, $replacer, array(&$this, 'unchanged_token'));
 			$f = fopen($filename, 'w');
