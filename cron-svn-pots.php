@@ -49,12 +49,15 @@ if ( isset( $options['u'] ) && isset( $options['w'] ) ) {
 	$svn_args[] = '--password='.$options['w'];
 	$svn_args[] = '--no-auth-cache';
 }
-$svn = 'svn';
+$svn_args_str = implode( ' ', array_map( 'escapeshellarg', $svn_args ) );
+$svn = 'svn '.$svn_args_str;
 
 
 $versions = array();
 
 chdir( $application_svn_checkout );
+$exit = silent_system( "$svn cleanup" );
+if ( 0 != $exit ) die();
 $exit = silent_system( "$svn up" );
 if ( 0 != $exit ) die();
 if ( is_dir( 'trunk' ) ) $versions[] = 'trunk';
@@ -69,6 +72,8 @@ if ( $no_branch_dirs ) {
 
 chdir( $pot_svn_checkout );
 if ( $application_svn_checkout != $pot_svn_checkout) {
+	$exit = silent_system( "$svn cleanup" );
+	if ( 0 != $exit ) die();
 	$exit = silent_system( "$svn up" );
 	if ( 0 != $exit ) die();
 }
@@ -96,8 +101,7 @@ foreach( $versions as $version ) {
 		preg_match( '/Revision:\s+(\d+)/', `svn info $application_path`, $matches );
 		$logmsg = isset( $matches[1] ) && intval( $matches[1] )? "POT, generated from r".intval( $matches[1] ) : 'Automatic POT update';
 		$target = $exists? $pot : $version;
-		$svn_args_str = implode( ' ', array_map( 'escapeshellarg', $svn_args ) );
-		$command = "$svn ci $target --non-interactive --message='$logmsg' $svn_args_str";
+		$command = "$svn ci $target --non-interactive --message='$logmsg'";
 		if ( !$dry_run )
 			silent_system( $command );
 		else
