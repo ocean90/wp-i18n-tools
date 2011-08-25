@@ -68,13 +68,13 @@ class MakePOT {
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
-		),		
+		),
 		'wp-tz' => array(
 			'description' => 'Translation of timezone strings in WordPress {version}',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
-		),		
+		),
 		'bb' => array(
 			'description' => 'Translation of bbPress',
 			'copyright-holder' => 'bbPress',
@@ -100,7 +100,7 @@ class MakePOT {
 			'package-name' => 'BuddyPress',
 		),
 	);
-	
+
 	function __construct($deprecated = true) {
 		$this->extractor = new StringExtractor( $this->rules );
 	}
@@ -157,10 +157,10 @@ class MakePOT {
 			$placeholders['version'] = $wp_version;
 		else
 			return false;
-		$output = is_null( $output )? $default_output : $output;		
+		$output = is_null( $output )? $default_output : $output;
 		$res = $this->xgettext( $project, $dir, $output, $placeholders, $excludes, $includes );
 		if ( !$res ) return false;
-		
+
 		if ( $extract_not_gettexted ) {
 			$old_dir = getcwd();
 			$output = realpath( $output );
@@ -176,13 +176,13 @@ class MakePOT {
 		}
 		return $res;
 	}
-	
+
 	function wp_core($dir, $output) {
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-core', 'output' => $output,
 		) );
 	}
-	
+
 	function wp_ms($dir, $output) {
 		if ( !is_file("$dir/wp-admin/ms-users.php") ) return false;
 		$core_pot = tempnam( sys_get_temp_dir(), 'wordpress.pot');
@@ -211,7 +211,7 @@ class MakePOT {
 		system( "msgcat -u --use-first $ms_pot $common_pot -o $ms_pot" );
 		return true;
 	}
-	
+
 	function wp_tz($dir, $output) {
 		$continents_path = 'wp-admin/includes/continents-cities.php';
 		if ( !file_exists( "$dir/$continents_path" ) ) return false;
@@ -222,13 +222,13 @@ class MakePOT {
 			'extract_not_gettexted' => false,
 		) );
 	}
-	
+
 	function wp_version($dir) {
 		$version_php = $dir.'/wp-includes/version.php';
-		if ( !is_readable( $version_php ) ) return false;		
+		if ( !is_readable( $version_php ) ) return false;
 		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
 	}
-	
+
 
 	function mu($dir, $output) {
 		$placeholders = array();
@@ -335,12 +335,12 @@ class MakePOT {
 		system("msguniq $output_shell -o $output_shell");
 		return $res;
 	}
-	
+
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
 		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
 	}
-	
+
 	function rosetta( $dir, $output ) {
 		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
 			'mu-plugins/rosetta.php',
@@ -360,7 +360,7 @@ class MakePOT {
 			}
 		return $is_ms_file;
 	}
-	
+
 	function is_not_ms_file( $file_name ) {
 		return !$this->is_ms_file( $file_name );
 	}
