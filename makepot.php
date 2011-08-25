@@ -20,6 +20,7 @@ class MakePOT {
 		'bb',
 		'mu',
 		'bp',
+		'rosetta',
 	);
 
 	var $rules = array(
