@@ -344,9 +344,9 @@ class MakePOT {
 	function rosetta( $dir, $output ) {
 		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
 			'mu-plugins/rosetta.php',
-			'mu-plugins/rosetta/*.php',
-			'mu-plugins/rosetta/tmpl/*.php',
-			'themes/rosetta/*.php',
+			'mu-plugins/rosetta/[^/]+\.php',
+			'mu-plugins/rosetta/tmpl/.*\.php',
+			'themes/rosetta/.*\.php',
 		) );
 	}
 
