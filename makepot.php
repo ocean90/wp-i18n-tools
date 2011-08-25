@@ -339,6 +339,15 @@ class MakePOT {
 		$output = is_null($output)? "buddypress.pot" : $output;
 		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
 	}
+	
+	function rosetta( $dir, $output ) {
+		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
+			'mu-plugins/rosetta.php',
+			'mu-plugins/rosetta/*.php',
+			'mu-plugins/rosetta/tmpl/*.php',
+			'themes/rosetta/*.php',
+		) );
+	}
 
 	function is_ms_file( $file_name ) {
 		$is_ms_file = false;
