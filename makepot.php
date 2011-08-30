@@ -99,6 +99,11 @@ class MakePOT {
 			'copyright-holder' => 'BuddyPress',
 			'package-name' => 'BuddyPress',
 		),
+		'rosetta' => array(
+			'description' => 'Rosetta (.wordpress.org locale sites)',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'Rosetta',
+		),
 	);
 
 	function __construct($deprecated = true) {
