@@ -20,6 +20,7 @@ function silent_system( $command ) {
 $options = getopt( 'c:p:m:n:sa:b:u:w:d' );
 if ( empty( $options ) ) {
 ?>
+	-s No branch/version directories, it's all flat
 	-c	Application svn checkout
 	-p	POT svn checkout
 	-m	MakePOT project
