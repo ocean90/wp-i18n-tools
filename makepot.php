@@ -54,7 +54,7 @@ class MakePOT {
 			'msgid-bugs-address' => 'http://wppolyglots.wordpress.com',
 			'language' => 'php',
 			'add-comments' => 'translators',
-			'comments' => "Copyright (C) 2010 {package-name}\nThis file is distributed under the same license as the {package-name} package.",
+			'comments' => "Copyright (C) {year} {package-name}\nThis file is distributed under the same license as the {package-name} package.",
 		),
 		'generic' => array(),
 		'wp-core' => array(
@@ -118,6 +118,7 @@ class MakePOT {
 		$meta = array_merge( $this->meta['default'], $this->meta[$project] );
 		$placeholders = array_merge( $meta, $placeholders );
 		$meta['output'] = $this->realpath_missing( $output_file );
+		$meta['year'] = date( 'Y' );
 		$placeholder_keys = array_map( create_function( '$x', 'return "{".$x."}";' ), array_keys( $placeholders ) );
 		$placeholder_values = array_values( $placeholders );
 		foreach($meta as $key => $value) {
@@ -134,7 +135,7 @@ class MakePOT {
 		$pot->set_header( 'MIME-Version', '1.0' );
 		$pot->set_header( 'Content-Type', 'text/plain; charset=UTF-8' );
 		$pot->set_header( 'Content-Transfer-Encoding', '8bit' );
-		$pot->set_header( 'PO-Revision-Date', '2010-MO-DA HO:MI+ZONE' );
+		$pot->set_header( 'PO-Revision-Date', date( 'Y') . '-MO-DA HO:MI+ZONE' );
 		$pot->set_header( 'Last-Translator', 'FULL NAME <EMAIL@ADDRESS>' );
 		$pot->set_header( 'Language-Team', 'LANGUAGE <LL@li.org>' );
 		$pot->set_comment_before_headers( $meta['comments'] );
