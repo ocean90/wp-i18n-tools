@@ -89,10 +89,11 @@ class MakePOT {
 		),
 		'wp-theme' => array(
 			'description' => 'Translation of the WordPress theme {name} {version} by {author}',
-			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
+			'msgid-bugs-address' => 'http://wordpress.org/tags/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
+			'comments' => "Copyright (C) {year} {author}",
 		),
 		'bp' => array(
 			'description' => 'Translation of BuddyPress',
@@ -118,7 +119,7 @@ class MakePOT {
 		$meta = array_merge( $this->meta['default'], $this->meta[$project] );
 		$placeholders = array_merge( $meta, $placeholders );
 		$meta['output'] = $this->realpath_missing( $output_file );
-		$meta['year'] = date( 'Y' );
+		$placeholders['year'] = date( 'Y' );
 		$placeholder_keys = array_map( create_function( '$x', 'return "{".$x."}";' ), array_keys( $placeholders ) );
 		$placeholder_values = array_values( $placeholders );
 		foreach($meta as $key => $value) {
@@ -330,6 +331,12 @@ class MakePOT {
 		$placeholders['author'] = $this->get_addon_header('Author', $source);
 		$placeholders['name'] = $this->get_addon_header('Theme Name', $source);
 		$placeholders['slug'] = $slug;
+
+		$license = $this->get_addon_header( 'License', $source );
+		if ( $license )
+			$this->meta['wp-theme']['comments'] .= "\nThis file is distributed under the {$license}.";
+		else
+			$this->meta['wp-theme']['comments'] .= "\nThis file is distributed under the same license as the {package-name} package.";
 
 		$output = is_null($output)? "$slug.pot" : $output;
 		$res = $this->xgettext('wp-theme', $dir, $output, $placeholders);
