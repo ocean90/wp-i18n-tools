@@ -206,26 +206,16 @@ class MakePOT {
 	}
 
 	function wp_core($dir, $output) {
-		// Short-circuit until everything else is ready.
+		if ( file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-core', 'output' => $output,
 		) );
-
-		if ( !file_exists( "$dir/wp-admin/user/about.php" ) ) {
-			// WP 3.3 or earlier.
-			return $this->wp_generic( $dir, array(
-				'project' => 'wp-core', 'output' => $output,
-			) );
-		} else {
-			// WP 3.4 and later
-			// @todo check returns
-			$this->wp_frontend($dir, $output);
-			$this->wp_admin($dir, null);
-			$this->wp_network_admin($dir, null);
-		}
 	}
 
 	function wp_frontend($dir, $output) {
+		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-frontend', 'output' => $output,
 			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/twentyten/.*', 'wp-content/themes/twentyeleven/.*' ),
@@ -235,6 +225,8 @@ class MakePOT {
 	}
 
 	function wp_admin($dir, $output) {
+		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+
 		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
 		if ( false === $frontend_pot ) return false;
 
@@ -267,6 +259,8 @@ class MakePOT {
 	}
 
 	function wp_network_admin($dir, $output) {
+		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+
 		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
 		if ( false === $frontend_pot ) return false;
 
