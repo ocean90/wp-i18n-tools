@@ -12,6 +12,9 @@ class MakePOT {
 
 	var $projects = array(
 		'generic',
+		'wp-frontend',
+		'wp-admin',
+		'wp-network-admin',
 		'wp-core',
 		'wp-ms',
 		'wp-tz',
@@ -57,6 +60,24 @@ class MakePOT {
 			'comments' => "Copyright (C) {year} {package-name}\nThis file is distributed under the same license as the {package-name} package.",
 		),
 		'generic' => array(),
+		'wp-frontend' => array(
+			'description' => 'Translation of frontend strings in WordPress {version}',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress',
+			'package-version' => '{version}',
+		),
+		'wp-admin' => array(
+			'description' => 'Translation of site admin strings in WordPress {version}',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress',
+			'package-version' => '{version}',
+		),
+		'wp-network-admin' => array(
+			'description' => 'Translation of network admin strings in WordPress {version}',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress',
+			'package-version' => '{version}',
+		),
 		'wp-core' => array(
 			'description' => 'Translation of WordPress {version}',
 			'copyright-holder' => 'WordPress',
@@ -185,12 +206,106 @@ class MakePOT {
 	}
 
 	function wp_core($dir, $output) {
+		if ( !file_exists( "$dir/wp-admin/user/about.php" ) ) {
+			// WP 3.3 or earlier.
+			return $this->wp_generic( $dir, array(
+				'project' => 'wp-core', 'output' => $output,
+			) );
+		} else {
+			// WP 3.4 and later
+			// @todo check returns
+			$this->wp_frontend($dir, $output);
+			$this->wp_admin($dir, null);
+			$this->wp_network_admin($dir, null);
+		}
+	}
+
+	function wp_frontend($dir, $output) {
 		return $this->wp_generic( $dir, array(
-			'project' => 'wp-core', 'output' => $output,
+			'project' => 'wp-frontend', 'output' => $output,
+			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/twentyten/.*', 'wp-content/themes/twentyeleven/.*' ),
+			'default_output' => 'wordpress.pot',
+			'extract_not_gettexted' => false,
 		) );
 	}
 
+	function wp_admin($dir, $output) {
+		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
+		if ( false === $frontend_pot ) return false;
+
+		$frontend_result = $this->wp_frontend( $dir, $frontend_pot );
+		if ( ! $frontend_result ) {
+			unlink( $frontend_pot );
+			return false;
+		}
+
+		$result = $this->wp_generic( $dir, array(
+			'project' => 'wp-admin', 'output' => $output,
+			'includes' => array( 'wp-admin/.*' ), 'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*' ),
+			'default_output' => 'wordpress-admin.pot',
+			'extract_not_gettexted' => false,
+		) );
+
+		if ( ! $result ) {
+			return false;
+		}
+
+		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
+		if ( ! $common_pot ) {
+			unlink( $frontend_pot );
+			return false;
+		}
+		$admin_pot = realpath( is_null( $output ) ? 'wordpress-admin.pot' : $output );
+		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot > $common_pot" );
+		system( "msgcat -u --use-first $admin_pot $common_pot -o $admin_pot" );
+		return true;
+	}
+
+	function wp_network_admin($dir, $output) {
+		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
+		if ( false === $frontend_pot ) return false;
+
+		$frontend_result = $this->wp_frontend( $dir, $frontend_pot );
+		if ( ! $frontend_result ) {
+			unlink( $frontend_pot );
+			return false;
+		}
+
+		$admin_pot = tempnam( sys_get_temp_dir(), 'admin.pot');
+		if ( false === $admin_pot ) return false;
+
+		$admin_result = $this->wp_admin( $dir, $admin_pot );
+		if ( ! $admin_result ) {
+			unlink( $admin_pot );
+			return false;
+		}
+
+		$result = $this->wp_generic( $dir, array(
+			'project' => 'wp-network-admin', 'output' => $output,
+			'includes' => array( 'wp-admin/network/.*' ), 'excludes' => array(),
+			'default_output' => 'wordpress-network-admin.pot',
+			'extract_not_gettexted' => false,
+		) );
+
+		if ( ! $result ) {
+			return false;
+		}
+
+		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
+		if ( ! $common_pot ) {
+			unlink( $admin_pot );
+			unlink( $frontend_pot );
+			return false;
+		}
+
+		$net_admin_pot = realpath( is_null( $output ) ? 'wordpress-network-admin.pot' : $output );
+		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot $net_admin_pot > $common_pot" );
+		system( "msgcat -u --use-first $net_admin_pot $common_pot -o $net_admin_pot" );
+		return true;
+	}
+
 	function wp_ms($dir, $output) {
+		if ( file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 		if ( !is_file("$dir/wp-admin/ms-users.php") ) return false;
 		$core_pot = tempnam( sys_get_temp_dir(), 'wordpress.pot');
 		if ( false === $core_pot ) return false;
