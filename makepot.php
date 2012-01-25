@@ -206,6 +206,11 @@ class MakePOT {
 	}
 
 	function wp_core($dir, $output) {
+		// Short-circuit until everything else is ready.
+		return $this->wp_generic( $dir, array(
+			'project' => 'wp-core', 'output' => $output,
+		) );
+
 		if ( !file_exists( "$dir/wp-admin/user/about.php" ) ) {
 			// WP 3.3 or earlier.
 			return $this->wp_generic( $dir, array(
