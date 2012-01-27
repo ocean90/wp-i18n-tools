@@ -282,7 +282,7 @@ class MakePOT {
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-network-admin', 'output' => $output,
 			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ), 'excludes' => array(),
-			'default_output' => 'wordpress-network-admin.pot',
+			'default_output' => 'wordpress-admin-network.pot',
 			'extract_not_gettexted' => false,
 		) );
 
