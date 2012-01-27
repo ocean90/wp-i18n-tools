@@ -238,7 +238,7 @@ class MakePOT {
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-admin', 'output' => $output,
-			'includes' => array( 'wp-admin/.*' ), 'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*' ),
+			'includes' => array( 'wp-admin/.*' ), 'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*', 'wp-admin/network.php' ),
 			'default_output' => 'wordpress-admin.pot',
 			'extract_not_gettexted' => false,
 		) );
@@ -281,7 +281,7 @@ class MakePOT {
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-network-admin', 'output' => $output,
-			'includes' => array( 'wp-admin/network/.*' ), 'excludes' => array(),
+			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ), 'excludes' => array(),
 			'default_output' => 'wordpress-network-admin.pot',
 			'extract_not_gettexted' => false,
 		) );
