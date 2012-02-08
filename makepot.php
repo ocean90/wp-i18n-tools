@@ -172,7 +172,7 @@ class MakePOT {
 			'default_output' => 'wordpress.pot',
 			'includes' => array(),
 			'excludes' => array_merge(
-				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/twentyten/.*', 'wp-content/themes/twentyeleven/.*', ),
+				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/.*', ),
 				$this->ms_files
 			),
 			'extract_not_gettexted' => true,
