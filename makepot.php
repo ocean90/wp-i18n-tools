@@ -172,7 +172,7 @@ class MakePOT {
 			'default_output' => 'wordpress.pot',
 			'includes' => array(),
 			'excludes' => array_merge(
-				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/.*', ),
+				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/twenty.*', ),
 				$this->ms_files
 			),
 			'extract_not_gettexted' => true,
@@ -218,7 +218,7 @@ class MakePOT {
 
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-frontend', 'output' => $output,
-			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/twentyten/.*', 'wp-content/themes/twentyeleven/.*' ),
+			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/.*' ),
 			'default_output' => 'wordpress.pot',
 			'extract_not_gettexted' => false,
 		) );
