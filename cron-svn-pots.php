@@ -17,10 +17,10 @@ function silent_system( $command ) {
 }
 
 
-$options = getopt( 'c:p:m:n:sa:b:u:w:d' );
+$options = getopt( 'c:p:m:n:sa:b:u:w:df' );
 if ( empty( $options ) ) {
 ?>
-	-s No branch/version directories, it's all flat
+	-s	No branch/version directories, it's all flat
 	-c	Application svn checkout
 	-p	POT svn checkout
 	-m	MakePOT project
@@ -30,6 +30,7 @@ if ( empty( $options ) ) {
 	-u	SVN username (optional)
 	-w	SVN password (optional)
 	-d	Dry-run
+	-f	Fast - do not update checkouts
 <?php
 	die;
 }
@@ -57,10 +58,12 @@ $svn = 'svn '.$svn_args_str;
 $versions = array();
 
 chdir( $application_svn_checkout );
-$exit = silent_system( "$svn cleanup" );
-if ( 0 != $exit ) die();
-$exit = silent_system( "$svn up" );
-if ( 0 != $exit ) die();
+if ( ! isset( $options['f'] ) ) {
+	$exit = silent_system( "$svn cleanup" );
+	if ( 0 != $exit ) die();
+	$exit = silent_system( "$svn up" );
+	if ( 0 != $exit ) die();
+}
 if ( is_dir( 'trunk' ) ) $versions[] = 'trunk';
 $branches = glob( 'branches/*' );
 if ( false !== $branches ) $versions = array_merge( $versions, $branches );
@@ -72,7 +75,7 @@ if ( $no_branch_dirs ) {
 }
 
 chdir( $pot_svn_checkout );
-if ( $application_svn_checkout != $pot_svn_checkout) {
+if ( $application_svn_checkout != $pot_svn_checkout && ! isset( $options['f'] ) ) {
 	$exit = silent_system( "$svn cleanup" );
 	if ( 0 != $exit ) die();
 	$exit = silent_system( "$svn up" );
@@ -91,21 +94,24 @@ foreach( $versions as $version ) {
 		if ( 0 != $exit ) continue;
 	}
 	if ( !is_dir(dirname("$pot_svn_checkout/$pot")) ) continue;
-	call_user_func( array( &$makepot, $makepot_project ), $application_path, "$pot_svn_checkout/$pot" );
+	if ( !call_user_func( array( &$makepot, $makepot_project ), $application_path, "$pot_svn_checkout/$pot" ) ) continue;
 	if ( !file_exists( "$pot_svn_checkout/$pot" ) ) continue; 
 	if ( !$exists ) {
 		$exit = silent_system( "$svn add $pot" );
 		if ( 0 != $exit ) continue;
 	}
 	// do not commit if the difference is only in the header, but always commit a new file
-	if ( !$exists || `svn diff $pot | wc -l` > 13 ) {
+	$real_differences = `svn diff $pot | wc -l` > 16;
+	$target = $exists ? $pot : $version;
+	if ( !$exists || $real_differences ) {
 		preg_match( '/Revision:\s+(\d+)/', `svn info $application_path`, $matches );
 		$logmsg = isset( $matches[1] ) && intval( $matches[1] )? "POT, generated from r".intval( $matches[1] ) : 'Automatic POT update';
-		$target = $exists? $pot : $version;
 		$command = "$svn ci $target --non-interactive --message='$logmsg'";
 		if ( !$dry_run )
 			silent_system( $command );
 		else
 			echo "CMD:\t$command\n";
+	} else {
+		silent_system( "$svn revert $target" );
 	}
 }
