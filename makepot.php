@@ -175,8 +175,8 @@ class MakePOT {
 				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/twenty.*', ),
 				$this->ms_files
 			),
-			'extract_not_gettexted' => true,
-			'not_gettexted_files_filter' => array( &$this, 'is_not_ms_file' ),
+			'extract_not_gettexted' => false,
+			'not_gettexted_files_filter' => false,
 		);
 		$args = array_merge( $defaults, $args );
 		extract( $args );
@@ -210,6 +210,8 @@ class MakePOT {
 
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-core', 'output' => $output,
+			'extract_not_gettexted' => true,
+                        'not_gettexted_files_filter' => array( &$this, 'is_not_ms_file' ),
 		) );
 	}
 
@@ -220,7 +222,6 @@ class MakePOT {
 			'project' => 'wp-frontend', 'output' => $output,
 			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/.*' ),
 			'default_output' => 'wordpress.pot',
-			'extract_not_gettexted' => false,
 		) );
 	}
 
@@ -240,7 +241,6 @@ class MakePOT {
 			'project' => 'wp-admin', 'output' => $output,
 			'includes' => array( 'wp-admin/.*' ), 'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*', 'wp-admin/network.php' ),
 			'default_output' => 'wordpress-admin.pot',
-			'extract_not_gettexted' => false,
 		) );
 
 		if ( ! $result ) {
@@ -283,7 +283,6 @@ class MakePOT {
 			'project' => 'wp-network-admin', 'output' => $output,
 			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ), 'excludes' => array(),
 			'default_output' => 'wordpress-admin-network.pot',
-			'extract_not_gettexted' => false,
 		) );
 
 		if ( ! $result ) {
@@ -317,7 +316,8 @@ class MakePOT {
 			'project' => 'wp-ms', 'output' => $output,
 			'includes' => $this->ms_files, 'excludes' => array(),
 			'default_output' => 'wordpress-ms.pot',
-			'extract_not_gettexted' => true, 'not_gettexted_files_filter' => array( &$this, 'is_ms_file' ),
+			'extract_not_gettexted' => true,
+			'not_gettexted_files_filter' => array( &$this, 'is_ms_file' ),
 		) );
 		if ( !$ms_result ) {
 			return false;
@@ -340,7 +340,6 @@ class MakePOT {
 			'project' => 'wp-tz', 'output' => $output,
 			'includes' => array($continents_path), 'excludes' => array(),
 			'default_output' => 'wordpress-continents-cities.pot',
-			'extract_not_gettexted' => false,
 		) );
 	}
 
