@@ -15,8 +15,8 @@ class StringExtractor {
 		$old_cwd = getcwd();
 		chdir( $dir );
 		$translations = new Translations;
-		$dh = opendir( '.' );
-		while ( ( $file_name = readdir( $dh ) ) !== false) {
+		$file_names = (array) scandir( '.' );
+		foreach ( $file_names as $file_name ) {
 			if ( '.' == $file_name || '..' == $file_name ) continue;
 			if ( preg_match( '/\.php$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
 				$translations->merge_originals_with( $this->extract_from_file( $file_name, $prefix ) );
