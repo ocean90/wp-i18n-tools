@@ -53,9 +53,8 @@ class NotGettexted {
 
 	function list_php_files($dir) {
 		$files = array();
-		$d = opendir($dir);
-		if (!$d) return false;
-		while(false !== ($item = readdir($d))) {
+		$items = scandir( $dir );
+		foreach ( (array) $items as $item ) {
 			$full_item = $dir . '/' . $item;
 			if ('.' == $item || '..' == $item)
 				continue;
@@ -64,7 +63,6 @@ class NotGettexted {
 			if (is_dir($full_item))
 				$files += array_merge($files, NotGettexted::list_php_files($full_item, $files));
 		}
-		closedir($d);
 		return $files;
 	}
 
