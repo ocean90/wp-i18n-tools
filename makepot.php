@@ -114,7 +114,7 @@ class MakePOT {
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
-			'comments' => "Copyright (C) {year} {author}",
+			'comments' => 'Copyright (C) {year} {author}\nThis file is distributed under the same license as the {package-name} package.',
 		),
 		'bp' => array(
 			'description' => 'Translation of BuddyPress',
@@ -424,8 +424,8 @@ class MakePOT {
 		$output = is_null($output)? "$slug.pot" : $output;
 		$res = $this->xgettext('wp-plugin', $dir, $output, $placeholders);
 		if (!$res) return false;
-	    $potextmeta = new PotExtMeta;
-	    $res = $potextmeta->append($main_file, $output);
+		$potextmeta = new PotExtMeta;
+		$res = $potextmeta->append($main_file, $output);
 		/* Adding non-gettexted strings can repeat some phrases */
 		$output_shell = escapeshellarg($output);
 		system("msguniq $output_shell -o $output_shell");
@@ -448,15 +448,15 @@ class MakePOT {
 
 		$license = $this->get_addon_header( 'License', $source );
 		if ( $license )
-			$this->meta['wp-theme']['comments'] .= "\nThis file is distributed under the {$license}.";
+			$this->meta['wp-theme']['comments'] = "Copyright (C) {year} {author}\nThis file is distributed under the {$license}.";
 		else
-			$this->meta['wp-theme']['comments'] .= "\nThis file is distributed under the same license as the {package-name} package.";
+			$this->meta['wp-theme']['comments'] = "Copyright (C) {year} {author}\nThis file is distributed under the same license as the {package-name} package.";
 
 		$output = is_null($output)? "$slug.pot" : $output;
 		$res = $this->xgettext('wp-theme', $dir, $output, $placeholders);
 		if (!$res) return false;
-	    $potextmeta = new PotExtMeta;
-	    $res = $potextmeta->append($main_file, $output);
+		$potextmeta = new PotExtMeta;
+		$res = $potextmeta->append($main_file, $output);
 		/* Adding non-gettexted strings can repeat some phrases */
 		$output_shell = escapeshellarg($output);
 		system("msguniq $output_shell -o $output_shell");
@@ -507,7 +507,7 @@ if ($included_files[0] == __FILE__) {
 	} else {
 		$usage  = "Usage: php makepot.php PROJECT DIRECTORY [OUTPUT]\n\n";
 		$usage .= "Generate POT file from the files in DIRECTORY [OUTPUT]\n";
-		$usage .= "Avaialbale projects: ".implode(', ', $makepot->projects)."\n";
+		$usage .= "Available projects: ".implode(', ', $makepot->projects)."\n";
 		fwrite(STDERR, $usage);
 		exit(1);
 	}
