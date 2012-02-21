@@ -243,9 +243,19 @@ class MakePOT {
 			'default_output' => 'wordpress-admin.pot',
 		) );
 
-		if ( ! $result ) {
+		if ( ! $result )
 			return false;
-		}
+
+                $potextmeta = new PotExtMeta;
+                $result = $potextmeta->append( "$dir/wp-content/plugins/akismet/akismet.php", $output );
+		if ( ! $result )
+			return false;
+		$result = $potextmeta->append( "$dir/wp-content/plugins/hello.php", $output );
+		if ( ! $result )
+			return false;
+                /* Adding non-gettexted strings can repeat some phrases */
+                $output_shell = escapeshellarg($output);
+                system("msguniq $output_shell -o $output_shell");
 
 		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
 		if ( ! $common_pot ) {
