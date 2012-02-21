@@ -463,9 +463,23 @@ class MakePOT {
 
 		$output = is_null($output)? "$slug.pot" : $output;
 		$res = $this->xgettext('wp-theme', $dir, $output, $placeholders);
-		if (!$res) return false;
+		if (! $res )
+			return false;
 		$potextmeta = new PotExtMeta;
-		$res = $potextmeta->append($main_file, $output);
+		$res = $potextmeta->append( $main_file, $output );
+		if ( ! $res )
+			return false;
+		// If we're dealing with a pre-3.4 default theme, don't extract page templates before 3.4.
+		$extract_templates = ! in_array( $slug, array( 'twentyten', 'twentyeleven', 'default', 'classic' ) );
+		if ( ! $extract_templates ) {
+			$wp_dir = dirname( dirname( dirname( $dir ) ) );
+			$extract_templates = file_exists( "$wp_dir/wp-admin/user/about.php" ) || ! file_exists( "$wp_dir/wp-load.php" );
+		}
+		if ( $extract_templates ) {
+			$res = $potextmeta->append( $dir, $output, array( 'Template Name' ) );
+			if ( ! $res )
+				return false;
+		}
 		/* Adding non-gettexted strings can repeat some phrases */
 		$output_shell = escapeshellarg($output);
 		system("msguniq $output_shell -o $output_shell");
