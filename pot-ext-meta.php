@@ -47,11 +47,13 @@ class PotExtMeta {
 		return $pot;
 	}
 
-	function append($ext_filename, $pot_filename) {
-	    if (is_dir($ext_filename)) {
-            $pot = implode('', array_map(array(&$this, 'load_from_file'), glob("$ext_filename/*.php")));
-	    } else {
-		    $pot = $this->load_from_file($ext_filename);
+	function append( $ext_filename, $pot_filename, $headers = null ) {
+		if ( $headers )
+			$this->headers = (array) $headers;
+		if ( is_dir( $ext_filename ) ) {
+			$pot = implode('', array_map(array(&$this, 'load_from_file'), glob("$ext_filename/*.php")));
+		} else {
+			$pot = $this->load_from_file($ext_filename);
 		}
 		$potf = '-' == $pot_filename? STDOUT : fopen($pot_filename, 'a');
 		if (!$potf) return false;
@@ -63,12 +65,12 @@ class PotExtMeta {
 
 $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
-    ini_set('display_errors', 1);
+	ini_set('display_errors', 1);
 	$potextmeta = new PotExtMeta;
 	if (!isset($argv[1])) {
 		$potextmeta->usage();
 	}
-	$potextmeta->append($argv[1], isset($argv[2])? $argv[2] : '-');
+	$potextmeta->append( $argv[1], isset( $argv[2] ) ? $argv[2] : '-', isset( $argv[3] ) ? $argv[3] : null );
 }
 
 ?>
