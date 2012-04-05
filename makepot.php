@@ -24,6 +24,7 @@ class MakePOT {
 		'mu',
 		'bp',
 		'rosetta',
+		'wporg-bb-forums',
 	);
 
 	var $rules = array(
@@ -120,6 +121,11 @@ class MakePOT {
 			'description' => 'Translation of BuddyPress',
 			'copyright-holder' => 'BuddyPress',
 			'package-name' => 'BuddyPress',
+		),
+		'wporg-bb-forums' => array(
+			'description' => 'WordPress.org International Forums',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress.org International Forums',
 		),
 		'rosetta' => array(
 			'description' => 'Rosetta (.wordpress.org locale sites)',
@@ -489,6 +495,17 @@ class MakePOT {
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
 		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
+	}
+
+	function wporg_bb_forums( $dir, $output ) {
+		$output = is_null( $output ) ? 'wporg.pot' : $output;
+		return $this->xgettext( 'wporg-bb-forums', $dir, $output, array(), array(
+			'bb-plugins/elfakismet/.*',
+			'bb-plugins/support-forum/.*',
+		), array(
+			'bb-theme/wporg/.*\.php',
+			'bb-plugins/.*',
+		) );
 	}
 
 	function rosetta( $dir, $output ) {
