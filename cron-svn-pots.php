@@ -1,5 +1,5 @@
 <?php
-require_once 'makepot.php';
+require_once dirname( __FILE__ ) . '/makepot.php';
 
 function silent_system( $command ) {
 	global $at_least_one_error;	

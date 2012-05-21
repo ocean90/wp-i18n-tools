@@ -7,8 +7,8 @@
  * @subpackage tools
  */
 error_reporting( E_ALL );
-require_once( 'PHPUnit/Framework.php' );
-require_once( '../not-gettexted.php' );
+require_once 'PHPUnit/Framework.php';
+require_once dirname( __FILE__ ) '/../not-gettexted.php';
 
 class Test_Not_Gettexted extends PHPUnit_Framework_TestCase {
 	

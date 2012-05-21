@@ -1,7 +1,7 @@
 <?php
-require_once 'not-gettexted.php';
-require_once 'pot-ext-meta.php';
-require_once 'extract/extract.php';
+require_once dirname( __FILE__ ) . '/not-gettexted.php';
+require_once dirname( __FILE__ ) . '/pot-ext-meta.php';
+require_once dirname( __FILE__ ) . '/extract/extract.php';
 
 if ( !defined( 'STDERR' ) ) {
 	define( 'STDERR', fopen( 'php://stderr', 'w' ) );

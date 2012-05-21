@@ -8,8 +8,8 @@
  * @subpackage tools
  */
 
-require_once 'pomo/po.php';
-require_once 'makepot.php';
+require_once dirname( __FILE__ ) . '/pomo/po.php';
+require_once dirname( __FILE__ ) . '/makepot.php';
 
 class PotExtMeta {
 
