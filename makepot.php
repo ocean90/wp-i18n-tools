@@ -52,6 +52,8 @@ class MakePOT {
 
 	var $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
 
+	var $temp_files = array();
+
 	var $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
@@ -136,6 +138,17 @@ class MakePOT {
 
 	function __construct($deprecated = true) {
 		$this->extractor = new StringExtractor( $this->rules );
+	}
+
+	function __destruct() {
+		foreach ( $this->temp_files as $temp_file )
+			unlink( $temp_file );
+	}
+
+	function tempnam( $file ) {
+		$tempnam = tempnam( sys_get_temp_dir(), $file );
+		$this->temp_files[] = $tempnam;
+		return $tempnam;
 	}
 
 	function realpath_missing($path) {
@@ -234,14 +247,12 @@ class MakePOT {
 	function wp_admin($dir, $output) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 
-		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
+		$frontend_pot = $this->tempnam( 'frontend.pot' );
 		if ( false === $frontend_pot ) return false;
 
 		$frontend_result = $this->wp_frontend( $dir, $frontend_pot );
-		if ( ! $frontend_result ) {
-			unlink( $frontend_pot );
+		if ( ! $frontend_result )
 			return false;
-		}
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-admin', 'output' => $output,
@@ -263,11 +274,9 @@ class MakePOT {
                 $output_shell = escapeshellarg($output);
                 system("msguniq $output_shell -o $output_shell");
 
-		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
-		if ( ! $common_pot ) {
-			unlink( $frontend_pot );
+		$common_pot = $this->tempnam( 'common.pot' );
+		if ( ! $common_pot )
 			return false;
-		}
 		$admin_pot = realpath( is_null( $output ) ? 'wordpress-admin.pot' : $output );
 		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot > $common_pot" );
 		system( "msgcat -u --use-first $admin_pot $common_pot -o $admin_pot" );
@@ -277,23 +286,19 @@ class MakePOT {
 	function wp_network_admin($dir, $output) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 
-		$frontend_pot = tempnam( sys_get_temp_dir(), 'frontend.pot');
+		$frontend_pot = $this->tempnam( 'frontend.pot' );
 		if ( false === $frontend_pot ) return false;
 
 		$frontend_result = $this->wp_frontend( $dir, $frontend_pot );
-		if ( ! $frontend_result ) {
-			unlink( $frontend_pot );
+		if ( ! $frontend_result )
 			return false;
-		}
 
-		$admin_pot = tempnam( sys_get_temp_dir(), 'admin.pot');
+		$admin_pot = $this->tempnam( 'admin.pot' );
 		if ( false === $admin_pot ) return false;
 
 		$admin_result = $this->wp_admin( $dir, $admin_pot );
-		if ( ! $admin_result ) {
-			unlink( $admin_pot );
+		if ( ! $admin_result )
 			return false;
-		}
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-network-admin', 'output' => $output,
@@ -305,12 +310,9 @@ class MakePOT {
 			return false;
 		}
 
-		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
-		if ( ! $common_pot ) {
-			unlink( $admin_pot );
-			unlink( $frontend_pot );
+		$common_pot = $this->tempnam( 'common.pot' );
+		if ( ! $common_pot )
 			return false;
-		}
 
 		$net_admin_pot = realpath( is_null( $output ) ? 'wordpress-network-admin.pot' : $output );
 		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot $net_admin_pot > $common_pot" );
@@ -321,13 +323,11 @@ class MakePOT {
 	function wp_ms($dir, $output) {
 		if ( file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 		if ( !is_file("$dir/wp-admin/ms-users.php") ) return false;
-		$core_pot = tempnam( sys_get_temp_dir(), 'wordpress.pot');
+		$core_pot = $this->tempnam( 'wordpress.pot' );
 		if ( false === $core_pot ) return false;
 		$core_result = $this->wp_core( $dir, $core_pot );
-		if ( !$core_result ) {
-			unlink( $core_pot );
+		if ( ! $core_result )
 			return false;
-		}
 		$ms_result = $this->wp_generic( $dir, array(
 			'project' => 'wp-ms', 'output' => $output,
 			'includes' => $this->ms_files, 'excludes' => array(),
@@ -338,11 +338,9 @@ class MakePOT {
 		if ( !$ms_result ) {
 			return false;
 		}
-		$common_pot = tempnam( sys_get_temp_dir(), 'common.pot' );
-		if ( !$common_pot ) {
-			unlink( $core_pot );
+		$common_pot = $this->tempnam( 'common.pot' );
+		if ( ! $common_pot )
 			return false;
-		}
 		$ms_pot = realpath( is_null( $output )? 'wordpress-ms.pot' : $output );
 		system( "msgcat --more-than=1 --use-first $core_pot $ms_pot > $common_pot" );
 		system( "msgcat -u --use-first $ms_pot $common_pot -o $ms_pot" );
