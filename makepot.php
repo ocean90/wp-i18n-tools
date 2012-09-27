@@ -470,7 +470,7 @@ class MakePOT {
 		if (! $res )
 			return false;
 		$potextmeta = new PotExtMeta;
-		$res = $potextmeta->append( $main_file, $output );
+		$res = $potextmeta->append( $main_file, $output, array( 'Theme Name', 'Theme URI', 'Description', 'Author', 'Author URI' ) );
 		if ( ! $res )
 			return false;
 		// If we're dealing with a pre-3.4 default theme, don't extract page templates before 3.4.
@@ -483,6 +483,16 @@ class MakePOT {
 			$res = $potextmeta->append( $dir, $output, array( 'Template Name' ) );
 			if ( ! $res )
 				return false;
+			$files = scandir( $dir );
+			foreach ( $files as $file ) {
+				if ( '.' == $file[0] || 'CVS' == $file )
+					continue;
+				if ( is_dir( $dir . '/' . $file ) ) {
+					$res = $potextmeta->append( $dir . '/' . $file, $output, array( 'Template Name' ) );
+					if ( ! $res )
+						return false;
+				}
+			}
 		}
 		/* Adding non-gettexted strings can repeat some phrases */
 		$output_shell = escapeshellarg($output);
