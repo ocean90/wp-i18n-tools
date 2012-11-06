@@ -41,6 +41,8 @@ class MakePOT {
 		'_ex' => array('string', 'context'),
 		'_nx' => array('singular', 'plural', null, 'context'),
 		'_nx_noop' => array('singular', 'plural', 'context'),
+		'_n_js' => array('singular', 'plural'),
+		'_nx_js' => array('singular', 'plural', 'context'),
 		'esc_attr__' => array('string'),
 		'esc_html__' => array('string'),
 		'esc_attr_e' => array('string'),
