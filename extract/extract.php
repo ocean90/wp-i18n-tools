@@ -3,14 +3,14 @@ require_once dirname( __FILE__ ) . '/../pomo/entry.php';
 require_once dirname( __FILE__ ) . '/../pomo/translations.php';
 
 class StringExtractor {
-	
+
 	var $rules = array();
 	var $comment_prefix = 'translators:';
-	
+
 	function __construct( $rules = array() ) {
 		$this->rules = $rules;
 	}
-	
+
 	function extract_from_directory( $dir, $excludes = array(), $includes = array(), $prefix = '' ) {
 		$old_cwd = getcwd();
 		chdir( $dir );
@@ -28,12 +28,12 @@ class StringExtractor {
 		chdir( $old_cwd );
 		return $translations;
 	}
-	
+
 	function extract_from_file( $file_name, $prefix ) {
 		$code = file_get_contents( $file_name );
 		return $this->extract_entries( $code, $prefix . $file_name );
 	}
-	
+
 	function does_file_name_match( $path, $excludes, $includes ) {
 		if ( $includes ) {
 			$matched_any_include = false;
@@ -54,7 +54,7 @@ class StringExtractor {
 		}
 		return true;
 	}
-	
+
 	function entry_from_call( $call, $file_name ) {
 		$rule = isset( $this->rules[$call['name']] )? $this->rules[$call['name']] : null;
 		if ( !$rule ) return null;
@@ -113,10 +113,10 @@ class StringExtractor {
 			$multiple[] = $entry;
 			return $multiple;
 		}
-		
+
 		return $entry;
 	}
-	
+
 	function extract_entries( $code, $file_name ) {
 		$translations = new Translations;
 		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
@@ -130,7 +130,7 @@ class StringExtractor {
 		}
 		return $translations;
 	}
-	
+
 	/**
 	 * Finds all function calls in $code and returns an array with an associative array for each function:
 	 *	- name - name of the function
@@ -153,14 +153,14 @@ class StringExtractor {
 				$func_name = $text;
 				$func_line = $line;
 				$func_comment = $latest_comment? $latest_comment : '';
-				
+
 				$just_got_into_func = true;
 				$latest_comment = false;
 				continue;
 			}
 			if ( T_COMMENT == $id ) {
 				$text = trim( preg_replace( '%^/\*|//%', '', preg_replace( '%\*/$%', '', $text ) ) );
-				if ( 0 === strpos( $text, $this->comment_prefix ) ) {
+				if ( 0 === stripos( $text, $this->comment_prefix ) ) {
 					$latest_comment = $text;
 				}
 			}
