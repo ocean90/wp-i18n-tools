@@ -8,10 +8,10 @@
  * @subpackage tools
  */
 // see: http://php.net/tokenizer
-if (!defined('T_ML_COMMENT'))
-	    define('T_ML_COMMENT', T_COMMENT);
+if ( ! defined( 'T_ML_COMMENT' ) )
+	    define( 'T_ML_COMMENT', T_COMMENT );
 else
-	    define('T_DOC_COMMENT', T_ML_COMMENT);
+	    define( 'T_DOC_COMMENT', T_ML_COMMENT );
 
 require_once dirname( __FILE__ ) . '/pomo/po.php';
 require_once dirname( __FILE__ ) . '/pomo/mo.php';
