@@ -126,6 +126,11 @@ class MakePOT {
 			'copyright-holder' => 'BuddyPress',
 			'package-name' => 'BuddyPress',
 		),
+		'glotpress' => array(
+			'description' => 'Translation of GlotPress',
+			'copyright-holder' => 'GlotPress',
+			'package-name' => 'GlotPress',
+		),
 		'wporg-bb-forums' => array(
 			'description' => 'WordPress.org International Forums',
 			'copyright-holder' => 'WordPress',
@@ -505,6 +510,11 @@ class MakePOT {
 	function bp($dir, $output) {
 		$output = is_null($output)? "buddypress.pot" : $output;
 		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
+	}
+
+	function glotpress( $dir, $output ) {
+		$output = is_null( $output ) ? "glotpress.pot" : $output;
+		return $this->xgettext( 'glotpress', $dir, $output );
 	}
 
 	function wporg_bb_forums( $dir, $output ) {
