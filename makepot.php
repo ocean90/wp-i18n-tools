@@ -107,11 +107,6 @@ class MakePOT {
 			'copyright-holder' => 'bbPress',
 			'package-name' => 'bbPress',
 		),
-		'glotpress' => array(
-			'description' => 'Translation of GlotPress',
-			'copyright-holder' => 'GlotPress',
-			'package-name' => 'GlotPress',
-		),
 		'wp-plugin' => array(
 			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
 			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
@@ -389,12 +384,6 @@ class MakePOT {
 	function bb($dir, $output) {
 		$placeholders = array();
 		$output = is_null($output)? 'bbpress.pot' : $output;
-		return $this->xgettext('bb', $dir, $output, $placeholders);
-	}
-
-	function glotpress($dir, $output) {
-		$placeholders = array();
-		$output = is_null($output)? 'glotpress.pot' : $output;
 		return $this->xgettext('bb', $dir, $output, $placeholders);
 	}
 
