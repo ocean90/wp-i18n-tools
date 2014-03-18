@@ -23,6 +23,7 @@ class MakePOT {
 		'bb',
 		'mu',
 		'bp',
+		'glotpress',
 		'rosetta',
 		'wporg-bb-forums',
 	);
@@ -105,6 +106,11 @@ class MakePOT {
 			'description' => 'Translation of bbPress',
 			'copyright-holder' => 'bbPress',
 			'package-name' => 'bbPress',
+		),
+		'glotpress' => array(
+			'description' => 'Translation of GlotPress',
+			'copyright-holder' => 'GlotPress',
+			'package-name' => 'GlotPress',
 		),
 		'wp-plugin' => array(
 			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
@@ -380,12 +386,16 @@ class MakePOT {
 		return $this->xgettext('wp', $dir, $output, $placeholders);
 	}
 
-
 	function bb($dir, $output) {
 		$placeholders = array();
 		$output = is_null($output)? 'bbpress.pot' : $output;
 		return $this->xgettext('bb', $dir, $output, $placeholders);
+	}
 
+	function glotpress($dir, $output) {
+		$placeholders = array();
+		$output = is_null($output)? 'glotpress.pot' : $output;
+		return $this->xgettext('bb', $dir, $output, $placeholders);
 	}
 
 	function get_first_lines($filename, $lines = 30) {
@@ -528,6 +538,7 @@ class MakePOT {
 	function rosetta( $dir, $output ) {
 		$output = is_null( $output )? 'rosetta.pot' : $output;
 		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
+			'mu-plugins/(roles|showcase|downloads)/.*\.php',
 			'mu-plugins/rosetta.*\.php',
 			'mu-plugins/rosetta/[^/]+\.php',
 			'mu-plugins/rosetta/tmpl/.*\.php',

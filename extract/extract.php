@@ -38,7 +38,7 @@ class StringExtractor {
 		if ( $includes ) {
 			$matched_any_include = false;
 			foreach( $includes as $include ) {
-				if ( preg_match( '|^'.$include.'$|', $path ) ) {
+				if ( preg_match( '#^'.$include.'$#', $path ) ) {
 					$matched_any_include = true;
 					break;
 				}
@@ -47,7 +47,7 @@ class StringExtractor {
 		}
 		if ( $excludes ) {
 			foreach( $excludes as $exclude ) {
-				if ( preg_match( '|^'.$exclude.'$|', $path ) ) {
+				if ( preg_match( '#^'.$exclude.'$#', $path ) ) {
 					return false;
 				}
 			}
