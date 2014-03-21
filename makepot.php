@@ -277,7 +277,16 @@ class MakePOT {
 
 		if ( ! $result )
 			return false;
+
 		$potextmeta = new PotExtMeta;
+
+		if ( ! file_exists( "$dir/wp-admin/css/about.css" ) ) { // < 3.9
+			$result = $potextmeta->append( "$dir/wp-content/plugins/akismet/akismet.php", $output );
+			if ( ! $result ) {
+				return false;
+			}
+		}
+
 		$result = $potextmeta->append( "$dir/wp-content/plugins/hello.php", $output );
 		if ( ! $result )
 			return false;
