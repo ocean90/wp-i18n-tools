@@ -245,9 +245,16 @@ class MakePOT {
 	function wp_frontend($dir, $output) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 
+		$excludes = array( 'wp-admin/.*', 'wp-content/themes/.*' );
+
+		// Exclude Akismet all together for 3.9+
+		if ( file_exists( "$dir/wp-admin/css/about.css" ) ) {
+			$excludes[] = 'wp-content/plugins/akismet/.*';
+		}
+
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-frontend', 'output' => $output,
-			'includes' => array(), 'excludes' => array( 'wp-admin/.*', 'wp-content/themes/.*' ),
+			'excludes' => $excludes,
 			'default_output' => 'wordpress.pot',
 		) );
 	}
@@ -270,11 +277,7 @@ class MakePOT {
 
 		if ( ! $result )
 			return false;
-
-                $potextmeta = new PotExtMeta;
-                $result = $potextmeta->append( "$dir/wp-content/plugins/akismet/akismet.php", $output );
-		if ( ! $result )
-			return false;
+		$potextmeta = new PotExtMeta;
 		$result = $potextmeta->append( "$dir/wp-content/plugins/hello.php", $output );
 		if ( ! $result )
 			return false;
