@@ -60,7 +60,7 @@ class MakePOT {
 	var $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
-			'msgid-bugs-address' => 'http://wppolyglots.wordpress.com',
+			'msgid-bugs-address' => 'http://make.wordpress.org/polyglots',
 			'language' => 'php',
 			'add-comments' => 'translators',
 			'comments' => "Copyright (C) {year} {package-name}\nThis file is distributed under the same license as the {package-name} package.",
@@ -109,14 +109,14 @@ class MakePOT {
 		),
 		'wp-plugin' => array(
 			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
-			'msgid-bugs-address' => 'http://wordpress.org/tag/{slug}',
+			'msgid-bugs-address' => 'http://wordpress.org/support/plugin/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
 		),
 		'wp-theme' => array(
 			'description' => 'Translation of the WordPress theme {name} {version} by {author}',
-			'msgid-bugs-address' => 'http://wordpress.org/tags/{slug}',
+			'msgid-bugs-address' => 'http://wordpress.org/support/theme/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
@@ -238,45 +238,54 @@ class MakePOT {
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-core', 'output' => $output,
 			'extract_not_gettexted' => true,
-                        'not_gettexted_files_filter' => array( &$this, 'is_not_ms_file' ),
+			'not_gettexted_files_filter' => array( $this, 'is_not_ms_file' ),
 		) );
 	}
 
-	function wp_frontend($dir, $output) {
-		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+	function wp_frontend( $dir, $output ) {
+		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) {
+			return false;
+		}
 
-		$excludes = array( 'wp-admin/.*', 'wp-content/themes/.*' );
+		$excludes = array( 'wp-admin/.*', 'wp-content/themes/.*', 'wp-includes/class-pop3\.php' );
 
-		// Exclude Akismet all together for 3.9+
+		// Exclude Akismet all together for 3.9+.
 		if ( file_exists( "$dir/wp-admin/css/about.css" ) ) {
 			$excludes[] = 'wp-content/plugins/akismet/.*';
 		}
 
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-frontend', 'output' => $output,
+			'includes' => array(),
 			'excludes' => $excludes,
 			'default_output' => 'wordpress.pot',
 		) );
 	}
 
 	function wp_admin($dir, $output) {
-		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
+		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) {
+			return false;
+		}
 
 		$frontend_pot = $this->tempnam( 'frontend.pot' );
-		if ( false === $frontend_pot ) return false;
+		if ( false === $frontend_pot ) {
+			return false;
+		}
 
 		$frontend_result = $this->wp_frontend( $dir, $frontend_pot );
-		if ( ! $frontend_result )
+		if ( ! $frontend_result ) {
 			return false;
+		}
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-admin', 'output' => $output,
-			'includes' => array( 'wp-admin/.*' ), 'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*', 'wp-admin/network.php' ),
+			'includes' => array( 'wp-admin/.*' ),
+			'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*', 'wp-admin/network.php' ),
 			'default_output' => 'wordpress-admin.pot',
 		) );
-
-		if ( ! $result )
+		if ( ! $result ) {
 			return false;
+		}
 
 		$potextmeta = new PotExtMeta;
 
@@ -288,15 +297,18 @@ class MakePOT {
 		}
 
 		$result = $potextmeta->append( "$dir/wp-content/plugins/hello.php", $output );
-		if ( ! $result )
+		if ( ! $result ) {
 			return false;
-                /* Adding non-gettexted strings can repeat some phrases */
-                $output_shell = escapeshellarg($output);
-                system("msguniq $output_shell -o $output_shell");
+		}
+
+		/* Adding non-gettexted strings can repeat some phrases */
+		$output_shell = escapeshellarg( $output );
+		system( "msguniq $output_shell -o $output_shell" );
 
 		$common_pot = $this->tempnam( 'common.pot' );
-		if ( ! $common_pot )
+		if ( ! $common_pot ) {
 			return false;
+		}
 		$admin_pot = realpath( is_null( $output ) ? 'wordpress-admin.pot' : $output );
 		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot > $common_pot" );
 		system( "msgcat -u --use-first $admin_pot $common_pot -o $admin_pot" );
@@ -322,7 +334,8 @@ class MakePOT {
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-network-admin', 'output' => $output,
-			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ), 'excludes' => array(),
+			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ),
+			'excludes' => array(),
 			'default_output' => 'wordpress-admin-network.pot',
 		) );
 
@@ -350,10 +363,11 @@ class MakePOT {
 			return false;
 		$ms_result = $this->wp_generic( $dir, array(
 			'project' => 'wp-ms', 'output' => $output,
-			'includes' => $this->ms_files, 'excludes' => array(),
+			'includes' => $this->ms_files,
+			'excludes' => array(),
 			'default_output' => 'wordpress-ms.pot',
 			'extract_not_gettexted' => true,
-			'not_gettexted_files_filter' => array( &$this, 'is_ms_file' ),
+			'not_gettexted_files_filter' => array( $this, 'is_ms_file' ),
 		) );
 		if ( !$ms_result ) {
 			return false;
@@ -372,7 +386,8 @@ class MakePOT {
 		if ( !file_exists( "$dir/$continents_path" ) ) return false;
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-tz', 'output' => $output,
-			'includes' => array($continents_path), 'excludes' => array(),
+			'includes' => array( $continents_path ),
+			'excludes' => array(),
 			'default_output' => 'wordpress-continents-cities.pot',
 		) );
 	}
@@ -393,10 +408,12 @@ class MakePOT {
 		return $this->xgettext('wp', $dir, $output, $placeholders);
 	}
 
+
 	function bb($dir, $output) {
 		$placeholders = array();
 		$output = is_null($output)? 'bbpress.pot' : $output;
 		return $this->xgettext('bb', $dir, $output, $placeholders);
+
 	}
 
 	function get_first_lines($filename, $lines = 30) {
@@ -444,8 +461,44 @@ class MakePOT {
 		if (is_null($slug)) {
 			$slug = $this->guess_plugin_slug($dir);
 		}
-		$main_file = $dir.'/'.$slug.'.php';
-		$source = $this->get_first_lines($main_file, $this->max_header_lines);
+
+		$plugins_dir = @opendir( $dir );
+		$plugin_files = array();
+		if ( $plugins_dir ) {
+			while ( ( $file = readdir( $plugins_dir ) ) !== false ) {
+				if ( '.' === substr( $file, 0, 1 ) ) {
+					continue;
+				}
+
+				if ( '.php' === substr( $file, -4 ) ) {
+					$plugin_files[] = $file;
+				}
+			}
+			closedir( $plugins_dir );
+		}
+
+		if ( empty( $plugin_files ) ) {
+			return false;
+		}
+
+		$main_file = '';
+		foreach ( $plugin_files as $plugin_file ) {
+			if ( ! is_readable( "$dir/$plugin_file" ) ) {
+				continue;
+			}
+
+			$source = $this->get_first_lines( "$dir/$plugin_file", $this->max_header_lines );
+
+			// Stop when we find a file with a plugin name header in it.
+			if ( $this->get_addon_header( 'Plugin Name', $source ) != false ) {
+				$main_file = "$dir/$plugin_file";
+				break;
+			}
+		}
+
+		if ( empty( $main_file ) ) {
+			return false;
+		}
 
 		$placeholders['version'] = $this->get_addon_header('Version', $source);
 		$placeholders['author'] = $this->get_addon_header('Author', $source);
@@ -569,7 +622,7 @@ $included_files = get_included_files();
 if ($included_files[0] == __FILE__) {
 	$makepot = new MakePOT;
 	if ((3 == count($argv) || 4 == count($argv)) && in_array($method = str_replace('-', '_', $argv[1]), get_class_methods($makepot))) {
-		$res = call_user_func(array(&$makepot, $method), realpath($argv[2]), isset($argv[3])? $argv[3] : null);
+		$res = call_user_func(array($makepot, $method), realpath($argv[2]), isset($argv[3])? $argv[3] : null);
 		if (false === $res) {
 			fwrite(STDERR, "Couldn't generate POT file!\n");
 		}
