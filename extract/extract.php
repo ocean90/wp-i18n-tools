@@ -2,9 +2,17 @@
 require_once dirname( __FILE__ ) . '/../pomo/entry.php';
 require_once dirname( __FILE__ ) . '/../pomo/translations.php';
 
+/**
+ * Responsible for extracting translatable strings from PHP source files
+ * in the form of Translations instances
+ */
 class StringExtractor {
 
-	var $rules = array();
+	var $rules = array(
+		'__' => array( 'string' ),
+		'_e' => array( 'string' ),
+		'_n' => array( 'singular', 'plural' ),
+	);
 	var $comment_prefix = 'translators:';
 
 	function __construct( $rules = array() ) {
@@ -19,10 +27,12 @@ class StringExtractor {
 		foreach ( $file_names as $file_name ) {
 			if ( '.' == $file_name || '..' == $file_name ) continue;
 			if ( preg_match( '/\.php$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
-				$translations->merge_originals_with( $this->extract_from_file( $file_name, $prefix ) );
+				$extracted = $this->extract_from_file( $file_name, $prefix );
+				$translations->merge_originals_with( $extracted );
 			}
 			if ( is_dir( $file_name ) ) {
-				$translations->merge_originals_with( $this->extract_from_directory( $file_name, $excludes, $includes, $prefix . $file_name . '/' ) );
+				$extracted = $this->extract_from_directory( $file_name, $excludes, $includes, $prefix . $file_name . '/' );
+				$translations->merge_originals_with( $extracted );
 			}
 		}
 		chdir( $old_cwd );
@@ -31,7 +41,7 @@ class StringExtractor {
 
 	function extract_from_file( $file_name, $prefix ) {
 		$code = file_get_contents( $file_name );
-		return $this->extract_entries( $code, $prefix . $file_name );
+		return $this->extract_from_code( $code, $prefix . $file_name );
 	}
 
 	function does_file_name_match( $path, $excludes, $includes ) {
@@ -117,7 +127,7 @@ class StringExtractor {
 		return $entry;
 	}
 
-	function extract_entries( $code, $file_name ) {
+	function extract_from_code( $code, $file_name ) {
 		$translations = new Translations;
 		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
 		foreach( $function_calls as $call ) {
