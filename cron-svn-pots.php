@@ -2,17 +2,18 @@
 require_once dirname( __FILE__ ) . '/makepot.php';
 
 function silent_system( $command ) {
-	global $at_least_one_error;	
+	global $at_least_one_error;
 	ob_start();
 	system( "$command 2>&1", $exit_code );
 	$output = ob_get_contents();
 	ob_end_clean();
+	$command = preg_replace( '/--password=[a-z0-9]+/i', '--password=[redacted]', $command );
 	if ( $exit_code != 0 ) {
 		echo "ERROR:\t$command\nCODE:\t$exit_code\nOUTPUT:\n";
 		echo $output."\n";
 	} else {
-		echo "OK:\t$command\n";		
-	}	
+		echo "OK:\t$command\n";
+	}
 	return $exit_code;
 }
 
@@ -95,7 +96,7 @@ foreach( $versions as $version ) {
 	}
 	if ( !is_dir(dirname("$pot_svn_checkout/$pot")) ) continue;
 	if ( !call_user_func( array( &$makepot, $makepot_project ), $application_path, "$pot_svn_checkout/$pot" ) ) continue;
-	if ( !file_exists( "$pot_svn_checkout/$pot" ) ) continue; 
+	if ( !file_exists( "$pot_svn_checkout/$pot" ) ) continue;
 	if ( !$exists ) {
 		$exit = silent_system( "$svn add $pot" );
 		if ( 0 != $exit ) continue;
