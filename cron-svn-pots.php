@@ -108,10 +108,12 @@ foreach( $versions as $version ) {
 		preg_match( '/Revision:\s+(\d+)/', `svn info $application_path`, $matches );
 		$logmsg = isset( $matches[1] ) && intval( $matches[1] )? "POT, generated from r".intval( $matches[1] ) : 'Automatic POT update';
 		$command = "$svn ci $target --non-interactive --message='$logmsg'";
-		if ( !$dry_run )
+		if ( ! $dry_run ) {
 			silent_system( $command );
-		else
+		} else {
+			$command = preg_replace( '/--password=[a-z0-9]+/i', '--password=[redacted]', $command );
 			echo "CMD:\t$command\n";
+		}
 	} else {
 		silent_system( "$svn revert $target" );
 	}
