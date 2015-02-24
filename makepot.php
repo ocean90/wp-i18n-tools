@@ -586,6 +586,7 @@ class MakePOT {
 		return $this->xgettext( 'wporg-bb-forums', $dir, $output, array(), array(
 			'bb-plugins/elfakismet/.*',
 			'bb-plugins/support-forum/.*',
+			'themes/.*',
 		) );
 	}
 
