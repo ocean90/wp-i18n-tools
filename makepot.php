@@ -26,6 +26,7 @@ class MakePOT {
 		'glotpress',
 		'rosetta',
 		'wporg-bb-forums',
+		'wporg-themes',
 	);
 
 	var $rules = array(
@@ -136,6 +137,11 @@ class MakePOT {
 			'description' => 'WordPress.org International Forums',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress.org International Forums',
+		),
+		'wporg' => array(
+			'description' => 'WordPress.org',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordPress.org',
 		),
 		'rosetta' => array(
 			'description' => 'Rosetta (.wordpress.org locale sites)',
@@ -587,6 +593,14 @@ class MakePOT {
 			'bb-plugins/elfakismet/.*',
 			'bb-plugins/support-forum/.*',
 			'themes/.*',
+		) );
+	}
+
+	function wporg_themes( $dir, $output ) {
+		$output = is_null( $output ) ? 'wporg-themes.pot' : $output;
+		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
+			'plugins/theme-directory/.*',
+			'themes/pub/wporg-themes/.*'
 		) );
 	}
 
