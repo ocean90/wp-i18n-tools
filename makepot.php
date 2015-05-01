@@ -27,6 +27,7 @@ class MakePOT {
 		'rosetta',
 		'wporg-bb-forums',
 		'wporg-themes',
+		'wporg-plugins',
 	);
 
 	var $rules = array(
@@ -601,6 +602,13 @@ class MakePOT {
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
 			'plugins/theme-directory/.*',
 			'themes/pub/wporg-themes/.*'
+		) );
+	}
+
+	function wporg_plugins( $dir, $output ) {
+		$output = is_null( $output ) ? 'wporg-plugins.pot' : $output;
+		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
+			'.*\.php',
 		) );
 	}
 
