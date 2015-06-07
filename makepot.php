@@ -63,7 +63,7 @@ class MakePOT {
 	var $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
-			'msgid-bugs-address' => 'http://make.wordpress.org/polyglots',
+			'msgid-bugs-address' => 'https://make.wordpress.org/polyglots',
 			'language' => 'php',
 			'add-comments' => 'translators',
 			'comments' => "Copyright (C) {year} {package-name}\nThis file is distributed under the same license as the {package-name} package.",
@@ -112,14 +112,14 @@ class MakePOT {
 		),
 		'wp-plugin' => array(
 			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
-			'msgid-bugs-address' => 'http://wordpress.org/support/plugin/{slug}',
+			'msgid-bugs-address' => 'https://wordpress.org/support/plugin/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
 		),
 		'wp-theme' => array(
 			'description' => 'Translation of the WordPress theme {name} {version} by {author}',
-			'msgid-bugs-address' => 'http://wordpress.org/support/theme/{slug}',
+			'msgid-bugs-address' => 'https://wordpress.org/support/theme/{slug}',
 			'copyright-holder' => '{author}',
 			'package-name' => '{name}',
 			'package-version' => '{version}',
@@ -416,14 +416,6 @@ class MakePOT {
 		return $this->xgettext('wp', $dir, $output, $placeholders);
 	}
 
-
-	function bb($dir, $output) {
-		$placeholders = array();
-		$output = is_null($output)? 'bbpress.pot' : $output;
-		return $this->xgettext('bb', $dir, $output, $placeholders);
-
-	}
-
 	function get_first_lines($filename, $lines = 30) {
 		$extf = fopen($filename, 'r');
 		if (!$extf) return false;
@@ -463,7 +455,12 @@ class MakePOT {
 		return $slug;
 	}
 
-	function wp_plugin($dir, $output, $slug = null) {
+	function wp_plugin( $dir, $output, $slug = null, $args = array() ) {
+		$defaults = array(
+			'excludes' => array(),
+			'includes' => array(),
+		);
+		$args = array_merge( $defaults, $args );
 		$placeholders = array();
 		// guess plugin slug
 		if (is_null($slug)) {
@@ -514,7 +511,7 @@ class MakePOT {
 		$placeholders['slug'] = $slug;
 
 		$output = is_null($output)? "$slug.pot" : $output;
-		$res = $this->xgettext('wp-plugin', $dir, $output, $placeholders);
+		$res = $this->xgettext( 'wp-plugin', $dir, $output, $placeholders, $args['excludes'], $args['includes'] );
 		if (!$res) return false;
 		$potextmeta = new PotExtMeta;
 		$res = $potextmeta->append($main_file, $output);
@@ -579,9 +576,26 @@ class MakePOT {
 		return $res;
 	}
 
-	function bp($dir, $output) {
-		$output = is_null($output)? "buddypress.pot" : $output;
-		return $this->xgettext('bp', $dir, $output, array(), array('bp-forums/bbpress/.*'));
+	function bp( $dir, $output ) {
+		$output = is_null( $output ) ? 'buddypress.pot' : $output;
+		$args = array(
+			'excludes' => array( 'bp-forums/bbpress/.*', 'tests/.*' ),
+		);
+
+		// BuddyPress 2.1+
+		if ( is_dir( "$dir/src" ) ) {
+			$args = array(
+				'includes' => array( 'src/.*' ),
+				'excludes' => array( 'src/bp-forums/bbpress/.*' ),
+			);
+		}
+
+		return $this->wp_plugin( $dir, $output, 'buddypress', $args );
+	}
+
+	function bb( $dir, $output ) {
+		$output = is_null( $output ) ? 'bbpress.pot' : $output;
+		return $this->wp_plugin( $dir, $output, 'bbpress' );
 	}
 
 	function glotpress( $dir, $output ) {
