@@ -447,7 +447,7 @@ class MakePOT {
 		 * - '<?php // Header: Value ?>'
 		 * - '<?php /* Header: Value * / $foo='bar'; ?>'
 		 */
-		if ( preg_match( '/^(?:[ \t]*<\?php)[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $source, $matches ) ) {
+		if ( preg_match( '/^(?:[ \t]*<\?php)?[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $source, $matches ) ) {
 			return $this->_cleanup_header_comment( $matches[1] );
 		} else {
 			return false;
