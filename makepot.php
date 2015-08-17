@@ -439,11 +439,26 @@ class MakePOT {
 	}
 
 	function get_addon_header($header, &$source) {
-		if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $source, $matches ) ) {
-			return trim($matches[1]);
+		/*
+		 * A few things this needs to handle:
+		 * - 'Header: Value\n'
+		 * - '// Header: Value'
+		 * - '/* Header: Value * /'
+		 * - '<?php // Header: Value ?>'
+		 * - '<?php /* Header: Value * / $foo='bar'; ?>'
+		 */
+		if ( preg_match( '/^(?:[ \t]*<\?php)[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $source, $matches ) ) {
+			return $this->_cleanup_header_comment( $matches[1] );
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Removes any trailing closing comment / PHP tags from the header value
+	 */
+	function _cleanup_header_comment( $str ) {
+		return trim( preg_replace( '/\s*(?:\*\/|\?>).*/', '', $str ) );
 	}
 
 	function generic($dir, $output) {
