@@ -428,15 +428,22 @@ class MakePOT {
 			}
 			$first_lines .= $line;
 		}
+
+		// PHP will close file handle, but we are good citizens.
+		fclose( $extf );
+
+		// Make sure we catch CR-only line endings.
+		$first_lines = str_replace( "\r", "\n", $first_lines );
+
 		return $first_lines;
 	}
 
-
 	function get_addon_header($header, &$source) {
-		if (preg_match('|'.$header.':(.*)$|mi', $source, $matches))
+		if ( preg_match( '/^[ \t\/*#@]*' . preg_quote( $header, '/' ) . ':(.*)$/mi', $source, $matches ) ) {
 			return trim($matches[1]);
-		else
+		} else {
 			return false;
+		}
 	}
 
 	function generic($dir, $output) {
