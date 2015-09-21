@@ -29,6 +29,7 @@ class MakePOT {
 		'wporg-themes',
 		'wporg-plugins',
 		'wporg-forums',
+		'wordcamporg',
 	);
 
 	var $rules = array(
@@ -63,7 +64,7 @@ class MakePOT {
 	var $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
-			'msgid-bugs-address' => 'https://make.wordpress.org/polyglots',
+			'msgid-bugs-address' => 'https://make.wordpress.org/polyglots/',
 			'language' => 'php',
 			'add-comments' => 'translators',
 			'comments' => "Copyright (C) {year} {package-name}\nThis file is distributed under the same license as the {package-name} package.",
@@ -144,6 +145,11 @@ class MakePOT {
 			'description' => 'WordPress.org',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress.org',
+		),
+		'wordcamporg' => array(
+			'description' => 'WordCamp.org',
+			'copyright-holder' => 'WordPress',
+			'package-name' => 'WordCamp.org',
 		),
 		'rosetta' => array(
 			'description' => 'Rosetta (.wordpress.org locale sites)',
@@ -652,6 +658,13 @@ class MakePOT {
 	function wporg_forums( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-forums.pot' : $output;
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
+			'.*\.php',
+		) );
+	}
+
+	function wordcamporg( $dir, $output ) {
+		$output = is_null( $output ) ? 'wordcamporg.pot' : $output;
+		return $this->xgettext( 'wordcamporg', $dir, $output, array(), array(), array(
 			'.*\.php',
 		) );
 	}
