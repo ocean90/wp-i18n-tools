@@ -673,6 +673,7 @@ class MakePOT {
 		$output = is_null( $output )? 'rosetta.pot' : $output;
 		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
 			'mu-plugins/(roles|showcase|downloads)/.*\.php',
+			'mu-plugins/jetpack-settings.php',
 			'mu-plugins/rosetta.*\.php',
 			'mu-plugins/rosetta/[^/]+\.php',
 			'mu-plugins/rosetta/tmpl/.*\.php',
