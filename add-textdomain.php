@@ -3,8 +3,6 @@
  * Console application, which adds textdomain argument
  * to all i18n function calls
  *
- * @author 
- * @version $Id$
  * @package wordpress-i18n
  */
 error_reporting(E_ALL);
@@ -16,9 +14,13 @@ class AddTextdomain {
 	var $modified_contents = '';
 	var $funcs;
 
-	function AddTextdomain() {
+	/**
+	 * Constructor.
+	 */
+	function __construct() {
 		$makepot = new MakePOT;
 		$this->funcs = array_keys( $makepot->rules );
+		$this->funcs[] = 'translate_nooped_plural';
 	}
 
 	function usage() {
@@ -101,7 +103,7 @@ if ($included_files[0] == __FILE__) {
 	if ('-i' == $argv[1]) {
 		$inplace = true;
 		if (!isset($argv[3])) $adddomain->usage();
-		array_shift($argv);	
+		array_shift($argv);
 	}
 
 	$adddomain->process_file($argv[1], $argv[2], $inplace);
