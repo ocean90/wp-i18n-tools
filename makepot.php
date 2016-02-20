@@ -650,7 +650,9 @@ class MakePOT {
 
 	function wporg_plugins( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-plugins.pot' : $output;
-		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
+		return $this->xgettext( 'wporg', $dir, $output, array(), array(
+			'plugins/svn-track/i18n-tools/.*'
+			), array(
 			'.*\.php',
 		) );
 	}
@@ -671,7 +673,10 @@ class MakePOT {
 
 	function rosetta( $dir, $output ) {
 		$output = is_null( $output )? 'rosetta.pot' : $output;
-		return $this->xgettext( 'rosetta', $dir, $output, array(), array(), array(
+		return $this->xgettext( 'rosetta', $dir, $output, array(), array(
+			'mu-plugins/rosetta/i18n-tools/.*',
+			'mu-plugins/rosetta/locales/.*',
+			), array(
 			'mu-plugins/(roles|showcase|downloads)/.*\.php',
 			'mu-plugins/jetpack-settings.php',
 			'mu-plugins/rosetta.*\.php',
