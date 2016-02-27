@@ -20,9 +20,9 @@ if ( !defined( 'STDERR' ) ) {
  * https://i18n.trac.wordpress.org/browser/tools/branches/legacy
  */
 class MakePOT {
-	var $max_header_lines = 30;
+	private $max_header_lines = 30;
 
-	var $projects = array(
+	public $projects = array(
 		'generic',
 		'wp-frontend',
 		'wp-admin',
@@ -39,7 +39,7 @@ class MakePOT {
 		'wordcamporg',
 	);
 
-	var $rules = array(
+	public $rules = array(
 		'_' => array('string'),
 		'__' => array('string'),
 		'_e' => array('string'),
@@ -64,11 +64,11 @@ class MakePOT {
 		'comments_number_link' => array('string', 'singular', 'plural'),
 	);
 
-	var $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
+	private $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
 
-	var $temp_files = array();
+	private $temp_files = array();
 
-	var $meta = array(
+	public $meta = array(
 		'default' => array(
 			'from-code' => 'utf-8',
 			'msgid-bugs-address' => 'https://make.wordpress.org/polyglots/',
@@ -143,26 +143,26 @@ class MakePOT {
 		),
 	);
 
-	function __construct($deprecated = true) {
+	public function __construct($deprecated = true) {
 		$this->extractor = new StringExtractor( $this->rules );
 	}
 
-	function __destruct() {
+	public function __destruct() {
 		foreach ( $this->temp_files as $temp_file )
 			unlink( $temp_file );
 	}
 
-	function tempnam( $file ) {
+	private function tempnam( $file ) {
 		$tempnam = tempnam( sys_get_temp_dir(), $file );
 		$this->temp_files[] = $tempnam;
 		return $tempnam;
 	}
 
-	function realpath_missing($path) {
+	private function realpath_missing($path) {
 		return realpath(dirname($path)).DIRECTORY_SEPARATOR.basename($path);
 	}
 
-	function xgettext($project, $dir, $output_file, $placeholders = array(), $excludes = array(), $includes = array()) {
+	private function xgettext($project, $dir, $output_file, $placeholders = array(), $excludes = array(), $includes = array()) {
 		$meta = array_merge( $this->meta['default'], $this->meta[$project] );
 		$placeholders = array_merge( $meta, $placeholders );
 		$meta['output'] = $this->realpath_missing( $output_file );
@@ -191,7 +191,7 @@ class MakePOT {
 		return true;
 	}
 
-	function wp_generic($dir, $args) {
+	public function wp_generic($dir, $args) {
 		$defaults = array(
 			'project' => 'wp-core',
 			'output' => null,
@@ -231,7 +231,7 @@ class MakePOT {
 		return $res;
 	}
 
-	function wp_frontend( $dir, $output ) {
+	public function wp_frontend( $dir, $output ) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) {
 			return false;
 		}
@@ -251,7 +251,7 @@ class MakePOT {
 		) );
 	}
 
-	function wp_admin($dir, $output) {
+	public function wp_admin($dir, $output) {
 		$frontend_pot = $this->tempnam( 'frontend.pot' );
 		if ( false === $frontend_pot ) {
 			return false;
@@ -300,7 +300,7 @@ class MakePOT {
 		return true;
 	}
 
-	function wp_network_admin($dir, $output) {
+	public function wp_network_admin($dir, $output) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
 
 		$frontend_pot = $this->tempnam( 'frontend.pot' );
@@ -338,7 +338,7 @@ class MakePOT {
 		return true;
 	}
 
-	function wp_tz($dir, $output) {
+	public function wp_tz($dir, $output) {
 		$continents_path = 'wp-admin/includes/continents-cities.php';
 		if ( !file_exists( "$dir/$continents_path" ) ) return false;
 		return $this->wp_generic( $dir, array(
@@ -349,13 +349,13 @@ class MakePOT {
 		) );
 	}
 
-	function wp_version($dir) {
+	private function wp_version($dir) {
 		$version_php = $dir.'/wp-includes/version.php';
 		if ( !is_readable( $version_php ) ) return false;
 		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
 	}
 
-	function get_first_lines($filename, $lines = 30) {
+	private function get_first_lines($filename, $lines = 30) {
 		$extf = fopen($filename, 'r');
 		if (!$extf) return false;
 		$first_lines = '';
@@ -377,7 +377,7 @@ class MakePOT {
 		return $first_lines;
 	}
 
-	function get_addon_header($header, &$source) {
+	private function get_addon_header($header, &$source) {
 		/*
 		 * A few things this needs to handle:
 		 * - 'Header: Value\n'
@@ -396,16 +396,16 @@ class MakePOT {
 	/**
 	 * Removes any trailing closing comment / PHP tags from the header value
 	 */
-	function _cleanup_header_comment( $str ) {
+	private function _cleanup_header_comment( $str ) {
 		return trim( preg_replace( '/\s*(?:\*\/|\?>).*/', '', $str ) );
 	}
 
-	function generic($dir, $output) {
+	public function generic($dir, $output) {
 		$output = is_null($output)? "generic.pot" : $output;
 		return $this->xgettext('generic', $dir, $output, array());
 	}
 
-	function guess_plugin_slug($dir) {
+	private function guess_plugin_slug($dir) {
 		if ('trunk' == basename($dir)) {
 			$slug = basename(dirname($dir));
 		} elseif (in_array(basename(dirname($dir)), array('branches', 'tags'))) {
@@ -416,7 +416,7 @@ class MakePOT {
 		return $slug;
 	}
 
-	function wp_plugin( $dir, $output, $slug = null, $args = array() ) {
+	public function wp_plugin( $dir, $output, $slug = null, $args = array() ) {
 		$defaults = array(
 			'excludes' => array(),
 			'includes' => array(),
@@ -482,7 +482,7 @@ class MakePOT {
 		return $res;
 	}
 
-	function wp_theme($dir, $output, $slug = null) {
+	public function wp_theme($dir, $output, $slug = null) {
 		$placeholders = array();
 		// guess plugin slug
 		if (is_null($slug)) {
@@ -537,12 +537,12 @@ class MakePOT {
 		return $res;
 	}
 
-	function glotpress( $dir, $output ) {
+	public function glotpress( $dir, $output ) {
 		$output = is_null( $output ) ? "glotpress.pot" : $output;
 		return $this->xgettext( 'glotpress', $dir, $output );
 	}
 
-	function wporg_bb_forums( $dir, $output ) {
+	public function wporg_bb_forums( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg.pot' : $output;
 		return $this->xgettext( 'wporg-bb-forums', $dir, $output, array(), array(
 			'bb-plugins/elfakismet/.*',
@@ -551,7 +551,7 @@ class MakePOT {
 		) );
 	}
 
-	function wporg_themes( $dir, $output ) {
+	public function wporg_themes( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-themes.pot' : $output;
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
 			'plugins/theme-directory/.*',
@@ -559,7 +559,7 @@ class MakePOT {
 		) );
 	}
 
-	function wporg_plugins( $dir, $output ) {
+	public function wporg_plugins( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-plugins.pot' : $output;
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(
 			'plugins/svn-track/i18n-tools/.*'
@@ -568,21 +568,21 @@ class MakePOT {
 		) );
 	}
 
-	function wporg_forums( $dir, $output ) {
+	public function wporg_forums( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-forums.pot' : $output;
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
 			'.*\.php',
 		) );
 	}
 
-	function wordcamporg( $dir, $output ) {
+	public function wordcamporg( $dir, $output ) {
 		$output = is_null( $output ) ? 'wordcamporg.pot' : $output;
 		return $this->xgettext( 'wordcamporg', $dir, $output, array(), array(), array(
 			'.*\.php',
 		) );
 	}
 
-	function rosetta( $dir, $output ) {
+	public function rosetta( $dir, $output ) {
 		$output = is_null( $output )? 'rosetta.pot' : $output;
 		return $this->xgettext( 'rosetta', $dir, $output, array(), array(
 			'mu-plugins/rosetta/i18n-tools/.*',
@@ -595,21 +595,6 @@ class MakePOT {
 			'mu-plugins/rosetta/tmpl/.*\.php',
 			'themes/rosetta/.*\.php',
 		) );
-	}
-
-	function is_ms_file( $file_name ) {
-		$is_ms_file = false;
-		$prefix = substr( $file_name, 0, 2 ) === './'? '\./' : '';
-		foreach( $this->ms_files as $ms_file )
-			if ( preg_match( '|^'.$prefix.$ms_file.'$|', $file_name ) ) {
-				$is_ms_file = true;
-				break;
-			}
-		return $is_ms_file;
-	}
-
-	function is_not_ms_file( $file_name ) {
-		return !$this->is_ms_file( $file_name );
 	}
 }
 
