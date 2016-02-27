@@ -20,9 +20,6 @@ class MakePOT {
 		'wp-tz',
 		'wp-plugin',
 		'wp-theme',
-		'bb',
-		'mu',
-		'bp',
 		'glotpress',
 		'rosetta',
 		'wporg-bb-forums',
@@ -106,11 +103,6 @@ class MakePOT {
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
 		),
-		'bb' => array(
-			'description' => 'Translation of bbPress',
-			'copyright-holder' => 'bbPress',
-			'package-name' => 'bbPress',
-		),
 		'wp-plugin' => array(
 			'description' => 'Translation of the WordPress plugin {name} {version} by {author}',
 			'msgid-bugs-address' => 'https://wordpress.org/support/plugin/{slug}',
@@ -125,11 +117,6 @@ class MakePOT {
 			'package-name' => '{name}',
 			'package-version' => '{version}',
 			'comments' => 'Copyright (C) {year} {author}\nThis file is distributed under the same license as the {package-name} package.',
-		),
-		'bp' => array(
-			'description' => 'Translation of BuddyPress',
-			'copyright-holder' => 'BuddyPress',
-			'package-name' => 'BuddyPress',
 		),
 		'glotpress' => array(
 			'description' => 'Translation of GlotPress',
@@ -412,16 +399,6 @@ class MakePOT {
 		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
 	}
 
-
-	function mu($dir, $output) {
-		$placeholders = array();
-		if (preg_match('/\$wpmu_version\s*=\s*\'(.*?)\';/', file_get_contents($dir.'/wp-includes/version.php'), $matches)) {
-			$placeholders['version'] = $matches[1];
-		}
-		$output = is_null($output)? 'wordpress.pot' : $output;
-		return $this->xgettext('wp', $dir, $output, $placeholders);
-	}
-
 	function get_first_lines($filename, $lines = 30) {
 		$extf = fopen($filename, 'r');
 		if (!$extf) return false;
@@ -602,28 +579,6 @@ class MakePOT {
 		$output_shell = escapeshellarg($output);
 		system("msguniq $output_shell -o $output_shell");
 		return $res;
-	}
-
-	function bp( $dir, $output ) {
-		$output = is_null( $output ) ? 'buddypress.pot' : $output;
-		$args = array(
-			'excludes' => array( 'bp-forums/bbpress/.*', 'tests/.*' ),
-		);
-
-		// BuddyPress 2.1+
-		if ( is_dir( "$dir/src" ) ) {
-			$args = array(
-				'includes' => array( 'src/.*' ),
-				'excludes' => array( 'src/bp-forums/bbpress/.*' ),
-			);
-		}
-
-		return $this->wp_plugin( $dir, $output, 'buddypress', $args );
-	}
-
-	function bb( $dir, $output ) {
-		$output = is_null( $output ) ? 'bbpress.pot' : $output;
-		return $this->wp_plugin( $dir, $output, 'bbpress' );
 	}
 
 	function glotpress( $dir, $output ) {
