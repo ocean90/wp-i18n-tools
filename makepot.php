@@ -355,7 +355,7 @@ class MakePOT {
 		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
 	}
 
-	private function get_first_lines($filename, $lines = 30) {
+	public function get_first_lines($filename, $lines = 30) {
 		$extf = fopen($filename, 'r');
 		if (!$extf) return false;
 		$first_lines = '';
@@ -377,7 +377,7 @@ class MakePOT {
 		return $first_lines;
 	}
 
-	private function get_addon_header($header, &$source) {
+	public function get_addon_header($header, &$source) {
 		/*
 		 * A few things this needs to handle:
 		 * - 'Header: Value\n'
