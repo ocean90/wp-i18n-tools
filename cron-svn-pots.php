@@ -18,7 +18,7 @@ function silent_system( $command ) {
 }
 
 
-$options = getopt( 'c:p:m:n:sa:b:u:w:df' );
+$options = getopt( 'c:p:m:n:sa:b:u:w:df', array( 'min-version::', 'max-version::' ) );
 if ( empty( $options ) ) {
 ?>
 	-s	No branch/version directories, it's all flat
@@ -32,6 +32,9 @@ if ( empty( $options ) ) {
 	-w	SVN password (optional)
 	-d	Dry-run
 	-f	Fast - do not update checkouts
+
+	--min-version Which branches/tags should be used
+	--max-version Which branches/tags should be used
 <?php
 	die;
 }
@@ -44,6 +47,8 @@ $no_branch_dirs = isset( $options['s'] );
 $relative_application_path = isset( $options['a'] )? '/'.$options['a'] : '';
 $relative_pot_path = isset( $options['b'] )? '/'.$options['b'] : '';
 $dry_run = isset( $options['d'] );
+$min_version = isset( $options['min-version'] ) ? $options['min-version'] : false;
+$max_version = isset( $options['max-version'] ) ? $options['max-version'] : false;
 
 $makepot = new MakePOT;
 $svn_args = array('--non-interactive');
@@ -84,6 +89,16 @@ if ( $application_svn_checkout != $pot_svn_checkout && ! isset( $options['f'] ) 
 }
 $real_application_svn_checkout = realpath( $application_svn_checkout );
 foreach( $versions as $version ) {
+	$_version = str_replace( array( 'tags/', 'branches/' ), '', $version, $replacements );
+	if ( $replacements ) {
+		if ( $min_version && version_compare( $_version, $min_version, '<' ) ) {
+			continue;
+		}
+		if ( $max_version && version_compare( $_version, $max_version, '>' ) ) {
+			continue;
+		}
+	}
+
 	$application_path = "$real_application_svn_checkout/$version{$relative_application_path}";
 	if ( !is_dir( $application_path ) ) continue;
 	$pot = "$version{$relative_pot_path}/$pot_name";
