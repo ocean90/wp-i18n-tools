@@ -7,6 +7,18 @@ if ( !defined( 'STDERR' ) ) {
 	define( 'STDERR', fopen( 'php://stderr', 'w' ) );
 }
 
+/**
+ * Class to create POT files for
+ *  - WordPress 3.4+
+ *  - WordPress plugins
+ *  - WordPress themes
+ *  - GlotPress (standalone)
+ *  - WordPress.org projects (Rosetta, forums, directories)
+ *  - WordCamp.org
+ *
+ * Support for older projects can be found in the legacy branch:
+ * https://i18n.trac.wordpress.org/browser/tools/branches/legacy
+ */
 class MakePOT {
 	var $max_header_lines = 30;
 
@@ -15,8 +27,6 @@ class MakePOT {
 		'wp-frontend',
 		'wp-admin',
 		'wp-network-admin',
-		'wp-core',
-		'wp-ms',
 		'wp-tz',
 		'wp-plugin',
 		'wp-theme',
@@ -81,18 +91,6 @@ class MakePOT {
 		),
 		'wp-network-admin' => array(
 			'description' => 'Translation of network admin strings in WordPress {version}',
-			'copyright-holder' => 'WordPress',
-			'package-name' => 'WordPress',
-			'package-version' => '{version}',
-		),
-		'wp-core' => array(
-			'description' => 'Translation of WordPress {version}',
-			'copyright-holder' => 'WordPress',
-			'package-name' => 'WordPress',
-			'package-version' => '{version}',
-		),
-		'wp-ms' => array(
-			'description' => 'Translation of multisite strings in WordPress {version}',
 			'copyright-holder' => 'WordPress',
 			'package-name' => 'WordPress',
 			'package-version' => '{version}',
@@ -233,16 +231,6 @@ class MakePOT {
 		return $res;
 	}
 
-	function wp_core($dir, $output) {
-		if ( file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
-
-		return $this->wp_generic( $dir, array(
-			'project' => 'wp-core', 'output' => $output,
-			'extract_not_gettexted' => true,
-			'not_gettexted_files_filter' => array( $this, 'is_not_ms_file' ),
-		) );
-	}
-
 	function wp_frontend( $dir, $output ) {
 		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) {
 			return false;
@@ -264,10 +252,6 @@ class MakePOT {
 	}
 
 	function wp_admin($dir, $output) {
-		if ( ! file_exists( "$dir/wp-admin/user/about.php" ) ) {
-			return false;
-		}
-
 		$frontend_pot = $this->tempnam( 'frontend.pot' );
 		if ( false === $frontend_pot ) {
 			return false;
@@ -351,34 +335,6 @@ class MakePOT {
 		$net_admin_pot = realpath( is_null( $output ) ? 'wordpress-network-admin.pot' : $output );
 		system( "msgcat --more-than=1 --use-first $frontend_pot $admin_pot $net_admin_pot > $common_pot" );
 		system( "msgcat -u --use-first $net_admin_pot $common_pot -o $net_admin_pot" );
-		return true;
-	}
-
-	function wp_ms($dir, $output) {
-		if ( file_exists( "$dir/wp-admin/user/about.php" ) ) return false;
-		if ( !is_file("$dir/wp-admin/ms-users.php") ) return false;
-		$core_pot = $this->tempnam( 'wordpress.pot' );
-		if ( false === $core_pot ) return false;
-		$core_result = $this->wp_core( $dir, $core_pot );
-		if ( ! $core_result )
-			return false;
-		$ms_result = $this->wp_generic( $dir, array(
-			'project' => 'wp-ms', 'output' => $output,
-			'includes' => $this->ms_files,
-			'excludes' => array(),
-			'default_output' => 'wordpress-ms.pot',
-			'extract_not_gettexted' => true,
-			'not_gettexted_files_filter' => array( $this, 'is_ms_file' ),
-		) );
-		if ( !$ms_result ) {
-			return false;
-		}
-		$common_pot = $this->tempnam( 'common.pot' );
-		if ( ! $common_pot )
-			return false;
-		$ms_pot = realpath( is_null( $output )? 'wordpress-ms.pot' : $output );
-		system( "msgcat --more-than=1 --use-first $core_pot $ms_pot > $common_pot" );
-		system( "msgcat -u --use-first $ms_pot $common_pot -o $ms_pot" );
 		return true;
 	}
 
