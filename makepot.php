@@ -64,7 +64,11 @@ class MakePOT {
 		'comments_number_link' => array('string', 'singular', 'plural'),
 	);
 
-	private $ms_files = array( 'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php', 'wp-admin/network\.php', 'wp-admin/includes/ms\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/class-wp-ms.*' );
+	private $ms_files = array(
+		'ms-.*', '.*/ms-.*', '.*/my-.*', 'wp-activate\.php', 'wp-signup\.php',
+		'wp-admin/network\.php', 'wp-admin/network/.*\.php', 'wp-admin/includes/ms\.php',
+		'wp-admin/includes/class-wp-ms.*', 'wp-admin/includes/network\.php',
+	);
 
 	private $temp_files = array();
 
@@ -262,10 +266,12 @@ class MakePOT {
 			return false;
 		}
 
+		$network_admin_files = $this->get_wp_network_admin_files( $dir );
+
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-admin', 'output' => $output,
 			'includes' => array( 'wp-admin/.*' ),
-			'excludes' => array( 'wp-admin/includes/continents-cities\.php', 'wp-admin/network/.*', 'wp-admin/network.php' ),
+			'excludes' => array_merge( array( 'wp-admin/includes/continents-cities\.php' ), $network_admin_files ),
 			'default_output' => 'wordpress-admin.pot',
 		) );
 		if ( ! $result ) {
@@ -319,7 +325,7 @@ class MakePOT {
 
 		$result = $this->wp_generic( $dir, array(
 			'project' => 'wp-network-admin', 'output' => $output,
-			'includes' => array( 'wp-admin/network/.*', 'wp-admin/network.php' ),
+			'includes' => $this->get_wp_network_admin_files( $dir ),
 			'excludes' => array(),
 			'default_output' => 'wordpress-admin-network.pot',
 		) );
@@ -338,6 +344,23 @@ class MakePOT {
 		return true;
 	}
 
+	private function get_wp_network_admin_files( $dir ) {
+		$wp_version = $this->wp_version( $dir );
+
+		// https://core.trac.wordpress.org/ticket/19852
+		$files = array( 'wp-admin/network/.*', 'wp-admin/network.php' );
+
+		// https://core.trac.wordpress.org/ticket/34910
+		if ( version_compare( $wp_version, '4.5-beta', '>=' ) ) {
+			$files = array_merge( $files, array(
+				'wp-admin/includes/class-wp-ms.*',
+				'wp-admin/includes/network.php',
+			) );
+		}
+
+		return $files;
+	}
+
 	public function wp_tz($dir, $output) {
 		$continents_path = 'wp-admin/includes/continents-cities.php';
 		if ( !file_exists( "$dir/$continents_path" ) ) return false;
@@ -349,7 +372,7 @@ class MakePOT {
 		) );
 	}
 
-	private function wp_version($dir) {
+	private function wp_version( $dir ) {
 		$version_php = $dir.'/wp-includes/version.php';
 		if ( !is_readable( $version_php ) ) return false;
 		return preg_match( '/\$wp_version\s*=\s*\'(.*?)\';/', file_get_contents( $version_php ), $matches )? $matches[1] : false;
