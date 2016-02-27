@@ -202,7 +202,7 @@ class MakePOT {
 			'default_output' => 'wordpress.pot',
 			'includes' => array(),
 			'excludes' => array_merge(
-				array('wp-admin/includes/continents-cities\.php', 'wp-content/themes/twenty.*', ),
+				array( 'wp-admin/includes/continents-cities\.php', 'wp-content/themes/twenty.*', ),
 				$this->ms_files
 			),
 			'extract_not_gettexted' => false,
@@ -361,12 +361,10 @@ class MakePOT {
 		return $files;
 	}
 
-	public function wp_tz($dir, $output) {
-		$continents_path = 'wp-admin/includes/continents-cities.php';
-		if ( !file_exists( "$dir/$continents_path" ) ) return false;
+	public function wp_tz( $dir, $output ) {
 		return $this->wp_generic( $dir, array(
 			'project' => 'wp-tz', 'output' => $output,
-			'includes' => array( $continents_path ),
+			'includes' => array( 'wp-admin/includes/continents-cities\.php' ),
 			'excludes' => array(),
 			'default_output' => 'wordpress-continents-cities.pot',
 		) );
