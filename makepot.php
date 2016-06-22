@@ -582,7 +582,8 @@ class MakePOT {
 
 	public function wporg_plugins_v3( $dir, $output ) {
 		$output = is_null( $output ) ? 'wporg-plugins-v3.pot' : $output;
-		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
+		return $this->xgettext( 'wporg', $dir, $output, array(), array(
+			'plugins/plugin-directory/libs/.*'), array(
 			'plugins/plugin-directory/.*',
 			'themes/pub/wporg-plugins/.*'
 		) );
