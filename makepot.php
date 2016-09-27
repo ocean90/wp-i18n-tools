@@ -602,6 +602,7 @@ class MakePOT {
 		$output = is_null( $output ) ? 'wporg-forums.pot' : $output;
 		return $this->xgettext( 'wporg', $dir, $output, array(), array(), array(
 			'plugins/wporg-bbp-.*',
+			'plugins/support-forums/.*',
 			'themes/pub/wporg-forums/.*'
 		) );
 	}
