@@ -1,18 +1,20 @@
 <?php
 require_once dirname( __FILE__ ) . '/../pomo/entry.php';
 require_once dirname( __FILE__ ) . '/../pomo/translations.php';
+require_once dirname( __FILE__ ) . '/vendor/jTokenizer/jtokenizer.php';
 
 /**
  * Responsible for extracting translatable strings from PHP source files
  * in the form of Translations instances
  */
-class StringExtractor {
+class StringExtractorJS {
 
 	var $rules = array(
 		'__' => array( 'string' ),
 		'_e' => array( 'string' ),
 		'_n' => array( 'singular', 'plural' ),
 	);
+
 	var $comment_prefix = 'translators:';
 
 	function __construct( $rules = array() ) {
@@ -26,7 +28,7 @@ class StringExtractor {
 		$file_names = (array) scandir( '.' );
 		foreach ( $file_names as $file_name ) {
 			if ( '.' == $file_name || '..' == $file_name ) continue;
-			if ( preg_match( '/\.php$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
+			if ( preg_match( '/\.js$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
 				$extracted = $this->extract_from_file( $file_name, $prefix );
 				$translations->merge_originals_with( $extracted );
 			}
@@ -148,27 +150,27 @@ class StringExtractor {
 	 *  - line - line number
 	 */
 	function find_function_calls( $function_names, $code ) {
-		$tokens = token_get_all( $code );
+		$tokens = j_token_get_all( $code );
 		$function_calls = array();
 		$latest_comment = false;
 		$in_func = false;
 		foreach( $tokens as $token ) {
 			$id = $text = null;
 			if ( is_array( $token ) ) list( $id, $text, $line ) = $token;
-			if ( T_WHITESPACE == $id ) continue;
-			if ( T_STRING == $id && in_array( $text, $function_names ) && !$in_func ) {
+			if ( J_WHITESPACE == $id ) continue;
+			if ( J_IDENTIFIER == $id && in_array( $text, $function_names ) && !$in_func ) {
 				$in_func = true;
 				$paren_level = -1;
 				$args = array();
 				$func_name = $text;
 				$func_line = $line;
-				$func_comment = $latest_comment? $latest_comment : '';
+				$func_comment = $latest_comment ? $latest_comment : '';
 
 				$just_got_into_func = true;
 				$latest_comment = false;
 				continue;
 			}
-			if ( T_COMMENT == $id ) {
+			if ( J_COMMENT == $id ) {
 				$text = preg_replace( '%^\s+\*\s%m', '', $text );
 				$text = str_replace( array( "\r\n", "\n" ), ' ', $text );;
 				$text = trim( preg_replace( '%^(/\*|//)%', '', preg_replace( '%\*/$%', '', $text ) ) );
@@ -177,7 +179,7 @@ class StringExtractor {
 				}
 			}
 			if ( !$in_func ) continue;
-			if ( '(' == $token ) {
+			if ( '(' == $text ) {
 				$paren_level++;
 				if ( 0 == $paren_level ) { // start of first argument
 					$just_got_into_func = false;
@@ -191,7 +193,7 @@ class StringExtractor {
 				$in_func = false;
 				$just_got_into_func = false;
 			}
-			if ( ')' == $token ) {
+			if ( ')' == $text ) {
 				if ( 0 == $paren_level ) {
 					$in_func = false;
 					$args[] = $current_argument;
@@ -202,20 +204,20 @@ class StringExtractor {
 				$paren_level--;
 				continue;
 			}
-			if ( ',' == $token && 0 == $paren_level ) {
+			if ( ',' == $text && 0 == $paren_level ) {
 				$args[] = $current_argument;
 				$current_argument = null;
 				$current_argument_is_just_literal = true;
 				continue;
 			}
-			if ( T_CONSTANT_ENCAPSED_STRING == $id && $current_argument_is_just_literal ) {
-				// we can use eval safely, because we are sure $text is just a string literal
-				eval('$current_argument = '.$text.';' );
+			if ( J_STRING_LITERAL == $id && $current_argument_is_just_literal ) {
+				$current_argument = trim( $text, '"\'' );
 				continue;
 			}
 			$current_argument_is_just_literal = false;
 			$current_argument = null;
 		}
+
 		return $function_calls;
 	}
 }
