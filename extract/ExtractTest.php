@@ -1,6 +1,7 @@
 <?php
 
 require_once dirname( __FILE__ ) . '/extract.php';
+require_once dirname( __FILE__ ) . '/class-stringextractor-js.php';
 
 class ExtractTest extends PHPUnit_Framework_TestCase {
 
@@ -9,6 +10,20 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 		$this->extractor->rules = array(
 			'__' => array('string'),
 		);
+
+		$this->extractor_js = new StringExtractorJS();
+		$this->extractor_js->rules = array(
+			'__' => array('string'),
+		);
+	}
+
+	/**
+	 * @group js
+	 */
+	function test_js_with_just_a_string() {
+		$expected = new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.js:1') ) );
+		$result = $this->extractor_js->extract_from_code( '__("baba");', 'baba.js' );
+		$this->assertEquals( $expected, $result->entries['baba'] );
 	}
 
 	function test_with_just_a_string() {
