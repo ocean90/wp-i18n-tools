@@ -3,6 +3,8 @@
 require_once dirname( __FILE__ ) . '/extract.php';
 require_once dirname( __FILE__ ) . '/class-stringextractor-js.php';
 
+define( 'TEST_DIR', dirname( __FILE__ ) . '/test/data' );
+
 class ExtractTest extends PHPUnit_Framework_TestCase {
 
 	function setUp() {
@@ -14,7 +16,110 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 		$this->extractor_js = new StringExtractorJS();
 		$this->extractor_js->rules = array(
 			'__' => array('string'),
+			'_x' => array('string', 'context'),
 		);
+	}
+
+	/**
+	 * @group js-file
+	 */
+	function test_js_extract_from_file() {
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "You are about to permanently delete these items.\n  'Cancel' to stop, 'OK' to delete.",
+				'references' => array( TEST_DIR . '/common.js:92' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Dismiss this notice.",
+				'references' => array( TEST_DIR . '/common.js:408' )
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/common.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "Select Color",
+				'references' => array( TEST_DIR . '/color-picker.js:41' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Current Color",
+				'references' => array( TEST_DIR . '/color-picker.js:41' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Default",
+				'references' => array( TEST_DIR . '/color-picker.js:46' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Clear",
+				'references' => array( TEST_DIR . '/color-picker.js:48' )
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/color-picker.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "Submitted on:",
+				'references' => array( TEST_DIR . '/comment.js:49' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => '%1$s %2$s, %3$s @ %4$s:%5$s',
+				'references' => array( TEST_DIR . '/comment.js:51' ),
+				'extracted_comments' => "translators: 1: month, 2: day, 3: year, 4: hour, 5: minute\n",
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/comment.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "(no label)",
+				'context' => 'missing menu item navigation label',
+				'references' => array( TEST_DIR . '/nav-menu.js:586' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => 'The changes you made will be lost if you navigate away from this page.',
+				'references' => array( TEST_DIR . '/nav-menu.js:1028' ),
+			) ),
+			new Translation_Entry( array(
+				'singular' => "You are about to permanently delete this menu. \n 'Cancel' to stop, 'OK' to delete.",
+				'references' => array( TEST_DIR . '/nav-menu.js:1168' ),
+			) ),
+			new Translation_Entry( array(
+				'singular' => "No results found.",
+				'references' => array( TEST_DIR . '/nav-menu.js:1198' ),
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/nav-menu.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "words",
+				'context' => 'Word count type. Do not translate!',
+				'references' => array( TEST_DIR . '/word-count.js:164' ),
+				'extracted_comments' => "translators: If your word count is based on single characters (e.g. East Asian characters), enter 'characters_excluding_spaces' or 'characters_including_spaces'. Otherwise, enter 'words'. Do not translate into your own language.\n",
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/word-count.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => ",",
+				'context' => 'tag delimiter',
+				'references' => array(
+					TEST_DIR . '/tags-box.js:24',
+					TEST_DIR . '/tags-box.js:38',
+					TEST_DIR . '/tags-box.js:68',
+					TEST_DIR . '/tags-box.js:110',
+					TEST_DIR . '/tags-box.js:180',
+				),
+			) ),
+		);
+		$result = $this->extractor_js->extract_from_file( TEST_DIR. '/tags-box.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
 	}
 
 	/**
