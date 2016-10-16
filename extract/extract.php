@@ -12,9 +12,11 @@ require_once dirname( __FILE__ ) . '/class-function-extractor-js.php';
 class StringExtractor {
 
 	public $rules = array(
-		'__' => array( 'string' ),
-		'_e' => array( 'string' ),
-		'_n' => array( 'singular', 'plural' ),
+		'php' => array(
+			'__' => array( 'string' ),
+			'_e' => array( 'string' ),
+			'_n' => array( 'singular', 'plural' ),
+		),
 	);
 
 	public $comment_prefix = 'translators:';
@@ -24,8 +26,27 @@ class StringExtractor {
 		'js'  => 'Function_Extractor_JS',
 	);
 
-	function __construct( $rules = array() ) {
-		$this->rules = $rules;
+	public function __construct( $rules = array() ) {
+		if ( $rules ) {
+			$this->set_rules( $rules );
+		}
+	}
+
+	/**
+	 * Sets rules for function calls.
+	 *
+	 * Includes back-compat for the old rules format.
+	 *
+	 * @param array $rules
+	 */
+	protected function set_rules( $rules ) {
+		$supported_files = array_keys( $this->extractors );
+		$rule_keys = array_keys( $rules );
+		if ( count( $supported_files ) < count( $rule_keys ) ) { // TODO: Use array_diff()?
+			$this->rules['php'] = $rules;
+		} else {
+			$this->rules = $rules;
+		}
 	}
 
 	function extract_from_directory( $dir, $excludes = array(), $includes = array(), $prefix = '' ) {
@@ -47,8 +68,8 @@ class StringExtractor {
 				// Get the extractor.
 				$extractor_class = $this->extractors[ $match[1] ];
 				$extractor = new $extractor_class( array(
-					'functions_to_extract' => array_keys( $this->rules ),
-					'comment_prefix' => $this->comment_prefix,
+					'functions_to_extract' => array_keys( $this->rules[ $match[1] ] ),
+					'comment_prefix'       => $this->comment_prefix,
 				) );
 				$extractor->load_source_from_file( $file_name );
 				$extracted_functions = $extractor->find_function_calls();
@@ -96,8 +117,18 @@ class StringExtractor {
 	}
 
 	function entry_from_call( $call, $file_name ) {
-		$rule = isset( $this->rules[$call['name']] )? $this->rules[$call['name']] : null;
-		if ( !$rule ) return null;
+		$file_ext = pathinfo( $file_name, PATHINFO_EXTENSION );
+		if ( ! isset( $this->rules[ $file_ext ] ) ) {
+			return null;
+		}
+
+		$rules = $this->rules[ $file_ext ];
+		if ( ! isset( $rules[ $call['name'] ] ) ) {
+			return null;
+		}
+
+		$rule = $rules[ $call['name'] ];
+
 		$entry = new Translation_Entry;
 		$multiple = array();
 		$complete = false;
@@ -158,9 +189,23 @@ class StringExtractor {
 	}
 
 	function extract_from_code( $code, $file_name ) {
-		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
+		$file_ext = pathinfo( $file_name, PATHINFO_EXTENSION );
 
-		return $this->get_originals( $function_calls, $file_name );
+		if ( isset( $this->extractors[ $file_ext ] ) && $this->rules[ $file_ext ] ) {
+			return null;
+		}
+
+		// Get the extractor.
+		$extractor_class = $this->extractors[ $file_ext ];
+		$extractor = new $extractor_class( array(
+			'functions_to_extract' => array_keys( $this->rules[ $file_ext ] ),
+			'comment_prefix'       => $this->comment_prefix,
+		) );
+		$extractor->set_source( $code );
+
+		$extracted_functions = $extractor->find_function_calls();
+
+		return $this->get_originals( $extracted_functions, $file_name );
 	}
 
 	/**
