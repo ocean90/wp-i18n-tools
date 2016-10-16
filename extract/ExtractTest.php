@@ -2,13 +2,137 @@
 
 require_once dirname( __FILE__ ) . '/extract.php';
 
+define( 'TEST_DIR', dirname( __FILE__ ) . '/test/data' );
+
 class ExtractTest extends PHPUnit_Framework_TestCase {
 
+	/**
+	 * @var StringExtractor
+	 */
+	protected $extractor;
+
 	function setUp() {
-		$this->extractor = new StringExtractor;
+		$this->extractor = new StringExtractor();
 		$this->extractor->rules = array(
-			'__' => array('string'),
+			'php' => array(
+				'__' => array( 'string' ),
+			),
+			'js' => array(
+				'__' => array( 'string' ),
+				'_x' => array( 'string', 'context' ),
+			),
 		);
+	}
+
+	/**
+	 * @group js-file
+	 */
+	function test_js_extract_from_file() {
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "You are about to permanently delete these items.\n  'Cancel' to stop, 'OK' to delete.",
+				'references' => array( TEST_DIR . '/common.js:92' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Dismiss this notice.",
+				'references' => array( TEST_DIR . '/common.js:408' )
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/common.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "Select Color",
+				'references' => array( TEST_DIR . '/color-picker.js:41' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Current Color",
+				'references' => array( TEST_DIR . '/color-picker.js:41' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Default",
+				'references' => array( TEST_DIR . '/color-picker.js:46' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => "Clear",
+				'references' => array( TEST_DIR . '/color-picker.js:48' )
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/color-picker.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "Submitted on:",
+				'references' => array( TEST_DIR . '/comment.js:49' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => '%1$s %2$s, %3$s @ %4$s:%5$s',
+				'references' => array( TEST_DIR . '/comment.js:51' ),
+				'extracted_comments' => "translators: 1: month, 2: day, 3: year, 4: hour, 5: minute\n",
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/comment.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "(no label)",
+				'context' => 'missing menu item navigation label',
+				'references' => array( TEST_DIR . '/nav-menu.js:586' )
+			) ),
+			new Translation_Entry( array(
+				'singular' => 'The changes you made will be lost if you navigate away from this page.',
+				'references' => array( TEST_DIR . '/nav-menu.js:1028' ),
+			) ),
+			new Translation_Entry( array(
+				'singular' => "You are about to permanently delete this menu. \n 'Cancel' to stop, 'OK' to delete.",
+				'references' => array( TEST_DIR . '/nav-menu.js:1168' ),
+			) ),
+			new Translation_Entry( array(
+				'singular' => "No results found.",
+				'references' => array( TEST_DIR . '/nav-menu.js:1198' ),
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/nav-menu.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => "words",
+				'context' => 'Word count type. Do not translate!',
+				'references' => array( TEST_DIR . '/word-count.js:164' ),
+				'extracted_comments' => "translators: If your word count is based on single characters (e.g. East Asian characters), enter 'characters_excluding_spaces' or 'characters_including_spaces'. Otherwise, enter 'words'. Do not translate into your own language.\n",
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/word-count.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+
+		$expected = array(
+			new Translation_Entry( array(
+				'singular' => ",",
+				'context' => 'tag delimiter',
+				'references' => array(
+					TEST_DIR . '/tags-box.js:24',
+					TEST_DIR . '/tags-box.js:38',
+					TEST_DIR . '/tags-box.js:68',
+					TEST_DIR . '/tags-box.js:110',
+					TEST_DIR . '/tags-box.js:180',
+				),
+			) ),
+		);
+		$result = $this->extractor->extract_from_file( TEST_DIR . '/tags-box.js', '' );
+		$this->assertEquals( $expected, array_values( $result->entries ) );
+	}
+
+	/**
+	 * @group js
+	 */
+	function test_js_with_just_a_string() {
+		$expected = new Translation_Entry( array( 'singular' => 'baba', 'references' => array('baba.js:1') ) );
+		$result = $this->extractor->extract_from_code( '__("baba");', 'baba.js' );
+		$this->assertEquals( $expected, $result->entries['baba'] );
 	}
 
 	function test_with_just_a_string() {
@@ -33,32 +157,32 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	}
 
 	function test_entry_from_call_non_expected_null_arg() {
-		$this->extractor->rules = array( '_nx' => array( 'singular', 'plural', 'context' ) );
+		$this->extractor->rules = array( 'php' => array( '_nx' => array( 'singular', 'plural', 'context' ) ) );
 		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', null, 'noun') ), 'baba.php' );
 		$this->assertEquals( $entry, null );
 	}
 
 	function test_entry_from_call_more_args_should_be_ok() {
-		$this->extractor->rules = array( '__' => array('string') );
+		$this->extractor->rules = array( 'php' => array( '__' => array('string') ) );
 		$entry = $this->extractor->entry_from_call( array( 'name' => '__', 'args' => array('baba', 5, 'pijo', null) ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba' ) ) );
 	}
 
 
 	function test_entry_from_call_context() {
-		$this->extractor->rules = array( '_x' => array( 'string', 'context' ) );
+		$this->extractor->rules = array( 'php' => array( '_x' => array( 'string', 'context' ) ) );
 		$entry = $this->extractor->entry_from_call( array( 'name' => '_x', 'args' => array('baba', 'noun') ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => 'baba', 'context' => 'noun' ) ) );
 	}
 
 	function test_entry_from_call_plural() {
-		$this->extractor->rules = array( '_n' => array( 'singular', 'plural' ) );
+		$this->extractor->rules = array( 'php' => array( '_n' => array( 'singular', 'plural' ) ) );
 		$entry = $this->extractor->entry_from_call( array( 'name' => '_n', 'args' => array('%s baba', '%s babas') ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas' ) ) );
 	}
 
 	function test_entry_from_call_plural_and_context() {
-		$this->extractor->rules = array( '_nx' => array( 'singular', 'plural', 'context' ) );
+		$this->extractor->rules = array( 'php' => array( '_nx' => array( 'singular', 'plural', 'context' ) ) );
 		$entry = $this->extractor->entry_from_call( array( 'name' => '_nx', 'args' => array('%s baba', '%s babas', 'noun') ), 'baba.php' );
 		$this->assertEquals( $entry, new Translation_Entry( array( 'singular' => '%s baba', 'plural' => '%s babas', 'context' => 'noun' ) ) );
 	}
@@ -79,14 +203,14 @@ class ExtractTest extends PHPUnit_Framework_TestCase {
 	}
 
 	function test_entry_from_call_multiple() {
-		$this->extractor->rules = array( 'c' => array( 'string', 'singular', 'plural' ) );
+		$this->extractor->rules = array( 'php' => array( 'c' => array( 'string', 'singular', 'plural' ) ) );
 		$entries = $this->extractor->entry_from_call( array( 'name' => 'c', 'args' => array('baba', 'dyado', 'dyados') ), 'baba.php' );
 		$this->assertEquals( array(
 				new Translation_Entry( array( 'singular' => 'baba' ) ), new Translation_Entry( array( 'singular' => 'dyado', 'plural' => 'dyados' ) ) ), $entries );
 	}
 
 	function test_entry_from_call_multiple_first_plural_then_two_strings() {
-		$this->extractor->rules = array( 'c' => array( 'singular', 'plural', null, 'string', 'string' ) );
+		$this->extractor->rules = array( 'php' => array( 'c' => array( 'singular', 'plural', null, 'string', 'string' ) ) );
 		$entries = $this->extractor->entry_from_call( array( 'name' => 'c', 'args' => array('dyado', 'dyados', 'baba', 'foo', 'bar') ), 'baba.php' );
 		$this->assertEquals( array(
 				new Translation_Entry( array( 'singular' => 'dyado', 'plural' => 'dyados' ) ),

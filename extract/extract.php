@@ -2,40 +2,92 @@
 require_once dirname( __FILE__ ) . '/../pomo/entry.php';
 require_once dirname( __FILE__ ) . '/../pomo/translations.php';
 
+require_once dirname( __FILE__ ) . '/class-function-extractor-php.php';
+require_once dirname( __FILE__ ) . '/class-function-extractor-js.php';
+
 /**
  * Responsible for extracting translatable strings from PHP source files
  * in the form of Translations instances
  */
 class StringExtractor {
 
-	var $rules = array(
-		'__' => array( 'string' ),
-		'_e' => array( 'string' ),
-		'_n' => array( 'singular', 'plural' ),
+	public $rules = array(
+		'php' => array(
+			'__' => array( 'string' ),
+			'_e' => array( 'string' ),
+			'_n' => array( 'singular', 'plural' ),
+		),
 	);
-	var $comment_prefix = 'translators:';
 
-	function __construct( $rules = array() ) {
-		$this->rules = $rules;
+	public $comment_prefix = 'translators:';
+
+	public $extractors = array(
+		'php' => 'Function_Extractor_PHP',
+		'js'  => 'Function_Extractor_JS',
+	);
+
+	public function __construct( $rules = array() ) {
+		if ( $rules ) {
+			$this->set_rules( $rules );
+		}
+	}
+
+	/**
+	 * Sets rules for function calls.
+	 *
+	 * Includes back-compat for the old rules format.
+	 *
+	 * @param array $rules
+	 */
+	protected function set_rules( $rules ) {
+		$supported_files = array_keys( $this->extractors );
+		$rule_keys = array_keys( $rules );
+		if ( count( $supported_files ) < count( $rule_keys ) ) { // TODO: Use array_diff()?
+			$this->rules['php'] = $rules;
+		} else {
+			$this->rules = $rules;
+		}
 	}
 
 	function extract_from_directory( $dir, $excludes = array(), $includes = array(), $prefix = '' ) {
 		$old_cwd = getcwd();
 		chdir( $dir );
-		$translations = new Translations;
+		$translations = new Translations();
+
 		$file_names = (array) scandir( '.' );
 		foreach ( $file_names as $file_name ) {
-			if ( '.' == $file_name || '..' == $file_name ) continue;
-			if ( preg_match( '/\.php$/', $file_name ) && $this->does_file_name_match( $prefix . $file_name, $excludes, $includes ) ) {
-				$extracted = $this->extract_from_file( $file_name, $prefix );
-				$translations->merge_originals_with( $extracted );
+			if ( '.' == $file_name || '..' == $file_name ) {
+				continue;
 			}
+
+			$supported_files = array_keys( $this->extractors );
+			if (
+				preg_match( '/\.(' . implode( '|', $supported_files ) . ')$/', $file_name, $match ) &&
+				$this->does_file_name_match( $prefix . $file_name, $excludes, $includes )
+			) {
+				// Get the extractor.
+				$extractor_class = $this->extractors[ $match[1] ];
+				/** @var Function_Extractor $extractor */
+				$extractor = new $extractor_class( array(
+					'functions_to_extract' => array_keys( $this->rules[ $match[1] ] ),
+					'comment_prefix'       => $this->comment_prefix,
+				) );
+				$extractor->load_source_from_file( $file_name );
+				$extracted_functions = $extractor->find_function_calls();
+
+				// Get originals and merge with existing.
+				$originals = $this->get_originals( $extracted_functions, $prefix . $file_name );
+				$translations->merge_originals_with( $originals );
+			}
+
 			if ( is_dir( $file_name ) ) {
 				$extracted = $this->extract_from_directory( $file_name, $excludes, $includes, $prefix . $file_name . '/' );
 				$translations->merge_originals_with( $extracted );
 			}
 		}
+
 		chdir( $old_cwd );
+
 		return $translations;
 	}
 
@@ -66,8 +118,18 @@ class StringExtractor {
 	}
 
 	function entry_from_call( $call, $file_name ) {
-		$rule = isset( $this->rules[$call['name']] )? $this->rules[$call['name']] : null;
-		if ( !$rule ) return null;
+		$file_ext = pathinfo( $file_name, PATHINFO_EXTENSION );
+		if ( ! isset( $this->rules[ $file_ext ] ) ) {
+			return null;
+		}
+
+		$rules = $this->rules[ $file_ext ];
+		if ( ! isset( $rules[ $call['name'] ] ) ) {
+			return null;
+		}
+
+		$rule = $rules[ $call['name'] ];
+
 		$entry = new Translation_Entry;
 		$multiple = array();
 		$complete = false;
@@ -128,16 +190,46 @@ class StringExtractor {
 	}
 
 	function extract_from_code( $code, $file_name ) {
-		$translations = new Translations;
-		$function_calls = $this->find_function_calls( array_keys( $this->rules ), $code );
-		foreach( $function_calls as $call ) {
-			$entry = $this->entry_from_call( $call, $file_name );
-			if ( is_array( $entry ) )
-				foreach( $entry as $single_entry )
-					$translations->add_entry_or_merge( $single_entry );
-			elseif ( $entry)
-				$translations->add_entry_or_merge( $entry );
+		$file_ext = pathinfo( $file_name, PATHINFO_EXTENSION );
+
+		if ( ! isset( $this->extractors[ $file_ext ] ) || ! $this->rules[ $file_ext ] ) {
+			return null;
 		}
+
+		// Get the extractor.
+		$extractor_class = $this->extractors[ $file_ext ];
+		$extractor = new $extractor_class( array(
+			'functions_to_extract' => array_keys( $this->rules[ $file_ext ] ),
+			'comment_prefix'       => $this->comment_prefix,
+		) );
+		$extractor->set_source( $code );
+
+		$extracted_functions = $extractor->find_function_calls();
+
+		return $this->get_originals( $extracted_functions, $file_name );
+	}
+
+	/**
+	 * Converts function arguments into originals.
+	 *
+	 * @param array  $function_calls Array of function calls.
+	 * @param string $file_name      The file name of the function calls.
+	 * @return Translations The originals.
+	 */
+	function get_originals( $function_calls, $file_name ) {
+		$translations = new Translations();
+
+		foreach ( $function_calls as $call ) {
+			$entry = $this->entry_from_call( $call, $file_name );
+			if ( is_array( $entry ) ) {
+				foreach ( $entry as $single_entry ) {
+					$translations->add_entry_or_merge( $single_entry );
+				}
+			} elseif ( $entry ) {
+				$translations->add_entry_or_merge( $entry );
+			}
+		}
+
 		return $translations;
 	}
 
