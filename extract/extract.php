@@ -67,6 +67,7 @@ class StringExtractor {
 			) {
 				// Get the extractor.
 				$extractor_class = $this->extractors[ $match[1] ];
+				/** @var Function_Extractor $extractor */
 				$extractor = new $extractor_class( array(
 					'functions_to_extract' => array_keys( $this->rules[ $match[1] ] ),
 					'comment_prefix'       => $this->comment_prefix,

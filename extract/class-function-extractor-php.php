@@ -1,55 +1,10 @@
 <?php
-require_once dirname( __FILE__ ) . '/vendor/jTokenizer/jtokenizer.php';
+require_once dirname( __FILE__ ) . '/class-function-extractor.php';
 
 /**
  * Responsible for extracting functions calls from PHP source files.
  */
-class Function_Extractor_PHP {
-
-	/**
-	 * @var array
-	 */
-	private $functions_to_extract = array();
-
-	/**
-	 * @var string
-	 */
-	private $comment_prefix = '';
-
-	/**
-	 * @var string
-	 */
-	private $source = '';
-
-	/**
-	 * Function_Extractor_PHP constructor.
-	 *
-	 * @param array $args Arguments.
-	 */
-	public function __construct( $args = array() ) {
-		if ( isset( $args['functions_to_extract'] ) ) {
-			$this->functions_to_extract = $args['functions_to_extract'];
-		}
-
-		if ( isset( $args['comment_prefix'] ) ) {
-			$this->comment_prefix = $args['comment_prefix'];
-		}
-	}
-
-	/**
-	 *
-	 * @param string $file Path to a JavaScript file.
-	 */
-	public function load_source_from_file( $file ) {
-		$this->source = file_get_contents( $file );
-	}
-
-	/**
-	 * @param string $source
-	 */
-	public function set_source( $source ) {
-		$this->source = $source;
-	}
+class Function_Extractor_PHP extends Function_Extractor {
 
 	/**
 	 * Finds function calls.
