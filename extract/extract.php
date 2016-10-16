@@ -191,7 +191,7 @@ class StringExtractor {
 	function extract_from_code( $code, $file_name ) {
 		$file_ext = pathinfo( $file_name, PATHINFO_EXTENSION );
 
-		if ( isset( $this->extractors[ $file_ext ] ) && $this->rules[ $file_ext ] ) {
+		if ( ! isset( $this->extractors[ $file_ext ] ) || ! $this->rules[ $file_ext ] ) {
 			return null;
 		}
 
